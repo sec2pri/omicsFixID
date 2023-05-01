@@ -267,7 +267,7 @@ ui <- fluidPage(
             # Add a text area input for entering identifiers
             textAreaInput(
               'XrefBatch_identifiers', 
-              'or instert identifier(s) here', 
+              'or insert identifier(s) here', 
               value = "", 
               width = NULL, 
               placeholder = 'one identifier per row'
@@ -317,7 +317,7 @@ ui <- fluidPage(
             # Add a text area input for entering identifiers
             textAreaInput(
               'sec2pri_identifiers', 
-              'or instert identifier(s) here', 
+              'or insert identifier(s) here', 
               value = "", 
               width = NULL, 
               placeholder = 'one identifier per row'
