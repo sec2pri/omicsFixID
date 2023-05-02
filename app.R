@@ -27,8 +27,12 @@ ChEBI <- data.table::fread("input/ChEBI_secIds.tsv")
 primaryIDs_ChEBI <- ChEBI$primaryID
 ## WikiData
 WikiData <- data.table::fread("input/wikidata_secIds.tsv")
+
 ## HGNC
-HGNC <- data.table::fread("input/hgnc_all_secIds.tsv")
+HGNC.ID <- data.table::fread("input/hgnc.id_secIds.tsv")
+primaryIDs_HGNC.ID <- unlist(data.table::fread("input/hgnc.id_priIds.tsv"), use.names = FALSE)
+HGNC <- data.table::fread("input/hgnc.symbol_secIds.tsv")
+primaryIDs_HGNC <- unlist(data.table::fread("input/hgnc.symbol_priIds.tsv"), use.names = FALSE)
 
 options(rsconnect.max.bundle.files = 3145728000)
 
@@ -46,48 +50,52 @@ piechart_theme <- theme_minimal() +
   )
 
 Xref_function <- function(identifiers, inputSpecies = "Human",
-                               inputSystemCode = "HGNC", outputSystemCode = "All") {
+                          inputSystemCode = "HGNC", outputSystemCode = "All") {
   
   # Preparing the query
   input_source <- dataSources$systemCode[dataSources$source == inputSystemCode]
-  if(length(identifiers) == 1) {
-    post_con <- paste0(identifiers, "\t", input_source, "\n")
-  } else 
-    post_con <- paste0(identifiers, collapse = paste0("\t", input_source, "\n"))
-  # Setting up the query url
-  url <- "https://webservice.bridgedb.org"
-  query_link  <- paste(url, inputSpecies, "xrefsBatch", sep = "/")
-  
-  # Getting the response to the query
-  res <- tryCatch({
-    POST(url = query_link, body = post_con)
-  }, error = function(e) {
-    message("Error: ", e$message)
-    return(NULL)
-  })
-  # Extracting the content in the raw text format
-  out <- content(res, as="text")
-
-  if (jsonlite::validate(out)) { # check if JSON string is valid
-    res <- fromJSON(json_str = out)
-    # Convert to data frame
-    df <- do.call(rbind, lapply(names(res), function(name) {
-      data.frame(
-        identifier = rep(name, length(res[[name]]$`result set`)),
-        identifier.source = rep(res[[name]]$datasource, length(res[[name]]$`result set`)),
-        target = gsub("^[^:]*:", "", res[[name]]$`result set`),
-        target.source = sapply(strsplit(res[[name]]$`result set`, ":"), `[`, 1)
-      )
-    })) %>% 
-      mutate(target.source = dataSources$source[match(target.source, dataSources$to_map)])
-    if(outputSystemCode == "All") {
-      return(df)
+  if(length(identifiers) != 0) {
+    if(length(identifiers) == 1) {
+      post_con <- paste0(identifiers, "\t", input_source, "\n")
     } else {
-      return(df %>% filter(target.source == outputSystemCode))
+      post_con <- paste0(identifiers, collapse = paste0("\t", input_source, "\n"))
+      post_con <- paste0(post_con, "\t", input_source, "\n")
     }
-  } else {
-    return(paste0("The response is not a valid JSON string."))
+    # Setting up the query url
+    url <- "https://webservice.bridgedb.org"
+    query_link  <- paste(url, inputSpecies, "xrefsBatch", sep = "/")
+    # Getting the response to the query
+    res <- tryCatch({
+      POST(url = query_link, body = post_con)
+    }, error = function(e) {
+      message("Error: ", e$message)
+      return(NULL)
+    })
+    # Extracting the content in the raw text format
+    out <- content(res, as="text")
+
+    if (jsonlite::validate(out)) { # check if JSON string is valid
+      res <- fromJSON(json_str = out)
+      # Convert to data frame
+      df <- do.call(rbind, lapply(names(res), function(name) {
+        data.frame(
+          identifier = rep(name, length(res[[name]]$`result set`)),
+          identifier.source = rep(res[[name]]$datasource, length(res[[name]]$`result set`)),
+          target = gsub("^[^:]*:", "", res[[name]]$`result set`),
+          target.source = sapply(strsplit(res[[name]]$`result set`, ":"), `[`, 1)
+        )
+      })) %>% 
+        mutate(target.source = dataSources$source[match(target.source, dataSources$to_map)])
+      if(outputSystemCode == "All") {
+        return(df)
+      } else {
+        return(df %>% filter(target.source == outputSystemCode))
+      }
+    } else {
+      return(paste0("The response is not a valid JSON string."))
+    }
   }
+  
 }
 
 #### Shinny App
@@ -475,11 +483,9 @@ server <- function(input, output, session) {
       input_ids <- as.character(input$XrefBatch_identifiers)
       input_ids <- unlist(strsplit(input_ids, '\n|,|\\s+', perl = TRUE))
       # Remove empty strings and return the list of identifiers
-      input_ids[input_ids != ""]
+      input_ids <- input_ids[input_ids != ""]
       input_ids
-    } else{
-      NULL
-    }
+    } 
   })
   
   # Function to make the output table
@@ -564,7 +570,7 @@ server <- function(input, output, session) {
     selectInput(
       inputId = 'sec2priDataSource', 
       label = 'Choose the data source:',
-      choices = c("ChEBI", "HMDB", "WikiData", "HGNC"),
+      choices = c("ChEBI", "HMDB", "WikiData", "HGNC", "HGNC Accession number"),
       selected = "ChEBI"
     )
   })
@@ -596,7 +602,7 @@ server <- function(input, output, session) {
       input_ids <- as.character(input$sec2pri_identifiers)
       input_ids <- unlist(strsplit(input_ids, '\n|,|\\s+', perl = TRUE))
       # Remove empty strings and return the list of identifiers
-      input_ids[input_ids != ""]
+      input_ids <- input_ids[input_ids != ""]
       input_ids
     }
   })
@@ -605,8 +611,13 @@ server <- function(input, output, session) {
   sec2pri_proportion <- reactive({
     req(input$sec2priDataSource) 
     if(!is.null(input$sec2pri_identifiers_file) | !is.null(input$sec2pri_identifiers)) {
-      priID_list = get(paste0("primaryIDs_", input$sec2priDataSource))
-      dataset = get(input$sec2priDataSource)
+      if(input$sec2priDataSource == "HGNC Accession number	"){
+        priID_list = primaryIDs_HGNC.ID
+        dataset = HGNC.ID
+      } else {
+        priID_list = get(paste0("primaryIDs_", input$sec2priDataSource))
+        dataset = get(input$sec2priDataSource)
+      }
       proportion_table = data.frame(
         type = c("#input IDs", 
                  "#primary IDs",
@@ -628,11 +639,22 @@ server <- function(input, output, session) {
   sec2pri_output <- reactive({
     req(input$sec2priDataSource)
     if(!is.null(input$sec2pri_identifiers_file) | !is.null(input$sec2pri_identifiers)) {
-      dataset = get(input$sec2priDataSource) 
-      seq2pri_table_output <- dataset %>% 
-        filter(secondaryID %in% c(secIdentifiersList())) %>%
-        select(secondaryID, primaryID) %>%
-        rename(identifier = secondaryID, `primary ID` = primaryID)
+      if(input$sec2priDataSource == "HGNC Accession number	"){
+        dataset = HGNC.ID
+      } else {
+        dataset = get(input$sec2priDataSource)
+      }
+      if(grepl("HGNC", input$sec2priDataSource)){
+        seq2pri_table_output <- dataset %>% 
+          filter(secondaryID %in% c(secIdentifiersList())) %>%
+          select(secondaryID, primaryID, comment) %>%
+          rename(identifier = secondaryID, `primary ID` = primaryID)
+      } else {
+        seq2pri_table_output <- dataset %>% 
+          filter(secondaryID %in% c(secIdentifiersList())) %>%
+          select(secondaryID, primaryID) %>%
+          rename(identifier = secondaryID, `primary ID` = primaryID)
+      }
       return(seq2pri_table_output)
     }
   })
@@ -677,7 +699,7 @@ server <- function(input, output, session) {
     # filename = "sec2pri_mapping_BridgeDB-Shiny.csv",
     content = function(file) {
       if(!is.null(sec2pri_output())) {
-        write.csv(
+        write.table(
           sec2pri_output(), file, row.names = FALSE, 
           sep = ifelse(input$sec2pri_download_format == "tsv", "\t", ","),
           quote = FALSE
