@@ -27,7 +27,7 @@ ChEBI <- data.table::fread("input/ChEBI_secIds.tsv")
 primaryIDs_ChEBI <- ChEBI$primaryID
 ## WikiData
 WikiData <- data.table::fread("input/wikidata_secIds.tsv")
-
+primaryIDs_WikiData <- WikiData$primaryID
 ## HGNC
 HGNC.ID <- data.table::fread("input/hgnc.id_secIds.tsv")
 primaryIDs_HGNC.ID <- unlist(data.table::fread("input/hgnc.id_priIds.tsv"), use.names = FALSE)
