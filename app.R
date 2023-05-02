@@ -611,7 +611,7 @@ server <- function(input, output, session) {
   sec2pri_proportion <- reactive({
     req(input$sec2priDataSource) 
     if(!is.null(input$sec2pri_identifiers_file) | !is.null(input$sec2pri_identifiers)) {
-      if(input$sec2priDataSource == "HGNC Accession number	"){
+      if(input$sec2priDataSource == "HGNC Accession number"){
         priID_list = primaryIDs_HGNC.ID
         dataset = HGNC.ID
       } else {
@@ -639,7 +639,7 @@ server <- function(input, output, session) {
   sec2pri_output <- reactive({
     req(input$sec2priDataSource)
     if(!is.null(input$sec2pri_identifiers_file) | !is.null(input$sec2pri_identifiers)) {
-      if(input$sec2priDataSource == "HGNC Accession number	"){
+      if(input$sec2priDataSource == "HGNC Accession number"){
         dataset = HGNC.ID
       } else {
         dataset = get(input$sec2priDataSource)
@@ -748,7 +748,6 @@ server <- function(input, output, session) {
   }, deleteFile = F)
   
 }
-
 
 shinyApp(ui = ui, server = server)
 
