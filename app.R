@@ -1,8 +1,9 @@
 #Empty the R environment
 rm(list = ls())
+options(shiny.appmode = "shiny")
 
 #Set your working environment to the location where your current source file is saved into.
-setwd("F:/bridgeDb/GitHubRepositories/BridgeDb-Shiny/")
+# setwd("F:/bridgeDb/GitHubRepositories/BridgeDb-Shiny/")
 
 # Load required packages
 library(dplyr)
@@ -12,9 +13,11 @@ library(shiny)
 # library(edgeR)
 library(DT)
 library(data.table)
+library(rjson)
+
 
 #Reading the required files
-dataSources <- data.table::fread("input/dataSources.tsv")
+dataSources <- data.table::fread("input/dataSource.csv")
 
 ## HMDB
 HMDB <- data.table::fread("input/hmdb_secIds.tsv")
@@ -42,77 +45,49 @@ piechart_theme <- theme_minimal() +
     plot.title = element_text(size = 16, face = "bold")
   )
 
-
-Xref_gene_function <- function(query, inputSpecies = "Human",
-                               inputSystemCode = "H", outputSystemCode = "All") {
-
-  # Preparing the query link.
-  ## Setting up the query url.
+Xref_function <- function(identifiers, inputSpecies = "Human",
+                               inputSystemCode = "HGNC", outputSystemCode = "All") {
+  
+  # Preparing the query
+  input_source <- dataSources$systemCode[dataSources$source == inputSystemCode]
+  if(length(identifiers) == 1) {
+    post_con <- paste0(identifiers, "\t", input_source, "\n")
+  } else 
+    post_con <- paste0(identifiers, collapse = paste0("\t", input_source, "\n"))
+  # Setting up the query url
   url <- "https://webservice.bridgedb.org"
-  if(outputSystemCode == "All") {
-    query_link  <- paste(url, inputSpecies, "xrefs", inputSystemCode, query, sep = "/")
+  query_link  <- paste(url, inputSpecies, "xrefsBatch", sep = "/")
+  
+  # Getting the response to the query
+  res <- tryCatch({
+    POST(url = query_link, body = post_con)
+  }, error = function(e) {
+    message("Error: ", e$message)
+    return(NULL)
+  })
+  # Extracting the content in the raw text format
+  out <- content(res, as="text")
+
+  if (jsonlite::validate(out)) { # check if JSON string is valid
+    res <- fromJSON(json_str = out)
+    # Convert to data frame
+    df <- do.call(rbind, lapply(names(res), function(name) {
+      data.frame(
+        identifier = rep(name, length(res[[name]]$`result set`)),
+        identifier.source = rep(res[[name]]$datasource, length(res[[name]]$`result set`)),
+        target = gsub("^[^:]*:", "", res[[name]]$`result set`),
+        target.source = sapply(strsplit(res[[name]]$`result set`, ":"), `[`, 1)
+      )
+    })) %>% 
+      mutate(target.source = dataSources$source[match(target.source, dataSources$to_map)])
+    if(outputSystemCode == "All") {
+      return(df)
+    } else {
+      return(df %>% filter(target.source == outputSystemCode))
+    }
   } else {
-    query_link  <- paste(url, inputSpecies, "xrefs", inputSystemCode, query, outputSystemCode, sep = "/")
+    return(paste0("The response is not a valid JSON string."))
   }
-  
-
-  # Getting the response to the query.
-  q_res <- GET(query_link)
-
-  # Extracting the content in the raw text format.
-  dat <- content(q_res, as = "text")
-
-  if(dat == "{}") {
-    warning(paste0("The query did not return a response."))
-  }
-
-  # Processing the raw content to get a data frame.
-  dat <- as.data.frame(strsplit(dat, ",")[[1]])
-  dat <- unlist(apply(dat, 1, strsplit, '":"'))
-  dat <- matrix(dat, ncol = 2, byrow = TRUE)
-  dat <- gsub('^[^:]*:|[{}\\\\/""]', "", dat)
-  dat <- data.frame (identifier = rep(query, nrow(dat)),
-                     target = dat[,1],
-                     source = dat[,2])
-
-  return(dat)
-
-}
-
-Xref_metabolite_function <- function(query, 
-                                     inputSystemCode = "Ch", outputSystemCode = "All") {
-  
-  # Preparing the query link.
-  ## Setting up the query url.
-  url <- "https://webservice.bridgedb.org/Human"
-  if(outputSystemCode == "All") {
-    query_link  <- paste(url, "xrefs", inputSystemCode, query, sep = "/")
-  } else {
-    query_link  <- paste(url, "xrefs", inputSystemCode, query, outputSystemCode, sep = "/")
-  }
-  
-  
-  # Getting the response to the query.
-  q_res <- GET(query_link)
-  
-  # Extracting the content in the raw text format.
-  dat <- content(q_res, as = "text")
-  
-  if(dat == "{}") {
-    warning(paste0("The query did not return a response."))
-  }
-  
-  # Processing the raw content to get a data frame.
-  dat <- as.data.frame(strsplit(dat, ",")[[1]])
-  dat <- unlist(apply(dat, 1, strsplit, '":"'))
-  dat <- matrix(dat, ncol = 2, byrow = TRUE)
-  dat <- gsub('^[^:]*:|[{}\\\\/""]', "", dat)
-  dat <- data.frame (identifier = rep(query, nrow(dat)),
-                     target = dat[,1],
-                     source = dat[,2])
-  
-  return(dat)
-  
 }
 
 #### Shinny App
@@ -248,7 +223,7 @@ ui <- fluidPage(
           # Add a sidebar panel with input controls
           sidebarPanel(
             # Render the input options for selecting a identifier type
-            radioButtons ("type", "Select identifier type:", 
+            radioButtons ("type", "Choose identifier type:", 
                           c ("Gene/Protein" = "gene", "Metabolites" = "metabolite"),
                           selected = "metabolite" 
                           ),
@@ -267,8 +242,8 @@ ui <- fluidPage(
             # Add a text area input for entering identifiers
             textAreaInput(
               'XrefBatch_identifiers', 
-              'or instert identifier(s) here', 
-              value = "", 
+              'or insert identifier(s) here', 
+              value = NULL, 
               width = NULL, 
               placeholder = 'one identifier per row'
             ),
@@ -278,12 +253,22 @@ ui <- fluidPage(
             uiOutput('outputDataSource'),
             # Add buttons for performing the identifier mapping and clearing the list
             div(
-              actionButton("XrefBatch_get", "Bridge"),
-              actionButton("XrefBatch_clear_list", "Clear"),
+              actionButton(
+                "XrefBatch_get", "Bridge",
+                style = "color: white; background-color: gray; border-color: black"),
+              actionButton(
+                "XrefBatch_clear_list", "Clear",
+                style = "color: white; background-color: gray; border-color: black"),
               br(),
               br(),
+              selectInput(
+                inputId = "XrefBatch_download_format",
+                label = "Choose a download format:",
+                choices = c("csv", "tsv")
+              ),
               downloadButton(
-                "XrefBatch_download", "Download results", 
+                outputId = "XrefBatch_download", 
+                label = "Download results", 
                 style = "color: white; background-color: gray; border-color: black"
               )
             ),
@@ -317,7 +302,7 @@ ui <- fluidPage(
             # Add a text area input for entering identifiers
             textAreaInput(
               'sec2pri_identifiers', 
-              'or instert identifier(s) here', 
+              'or insert identifier(s) here', 
               value = "", 
               width = NULL, 
               placeholder = 'one identifier per row'
@@ -326,12 +311,22 @@ ui <- fluidPage(
             uiOutput('dataSource'),
             # Add buttons for performing the identifier mapping and clearing the list
             div(
-              actionButton("sec2pri_get", "Bridge"),
-              actionButton("sec2pri_clear_list", "Clear"),
+              actionButton(
+                "sec2pri_get", "Bridge",
+                style = "color: white; background-color: gray; border-color: black"),
+              actionButton(
+                "sec2pri_clear_list", "Clear",
+                style = "color: white; background-color: gray; border-color: black"),
               br(),
               br(),
+              selectInput(
+                inputId = "sec2pri_download_format",
+                label = "Choose a download format:",
+                choices = c("csv", "tsv")
+              ),
               downloadButton(
-                "sec2pri_download", "Download results", 
+                outputId = "sec2pri_download",
+                label = "Download results", 
                 style = "color: white; background-color: gray; border-color: black"
               )
             ),
@@ -392,7 +387,7 @@ server <- function(input, output, session) {
         # Render the input options for selecting a species
         selectInput(
           inputId = 'inputSpecies',
-          label = 'Select species:',
+          label = 'Choose species:',
           choices = c("Human", "Mouse", "Rat"),
           selected = "Human"
         )
@@ -411,7 +406,7 @@ server <- function(input, output, session) {
         # Render the input options for selecting a species
         selectInput(
           inputId = 'inputDataSource', 
-          label = 'Select the input data source:',
+          label = 'Choose the input data source:',
           choices = dataSources$source[dataSources$type == "gene"],
           selected = "HGNC"
         )
@@ -421,7 +416,7 @@ server <- function(input, output, session) {
         # Render the input options for selecting a species
         selectInput(
           inputId = 'inputDataSource', 
-          label = 'Select the input data source:',
+          label = 'Choose the input data source:',
           choices = dataSources$source[dataSources$type == "metabolite"],
           selected = "ChEBI"
         )
@@ -435,7 +430,7 @@ server <- function(input, output, session) {
         # Render the input options for selecting a species
         selectInput(
           inputId = 'outputDataSource', 
-          label = 'Select one or more output data source:', 
+          label = 'Choose one or more output data source:', 
           choices = c("All", dataSources$source[dataSources$type == "gene"]),
           selected = "Ensembl"
         )
@@ -445,7 +440,7 @@ server <- function(input, output, session) {
         # Render the input options for selecting a species
         selectInput(
           inputId = 'outputDataSource', 
-          label = 'Select one or more output data source:', 
+          label = 'Choose one or more output data source:', 
           choices = c("All", dataSources$source[dataSources$type == "metabolite"]),
           selected = "HMDB"
         )
@@ -492,27 +487,23 @@ server <- function(input, output, session) {
     req(!is.null(identifiersList())) 
     if(input$type == "gene") {
       input_species <- input$inputSpecies
-      input_data_source <- dataSources$systemCode[dataSources$source == input$inputDataSource]
+      input_data_source <- input$inputDataSource
       output_data_source <- input$outputDataSource
-      XrefBatch_results <- lapply(identifiersList(), function(identifier) {
-        Xref_gene_function(
-          identifier, 
-          inputSpecies = input_species, 
-          inputSystemCode = input_data_source, 
-          outputSystemCode = output_data_source)
-      })
-      return(do.call(rbind, XrefBatch_results))
+      XrefBatch_results <- Xref_function(
+        identifiersList(), 
+        inputSpecies = input_species, 
+        inputSystemCode = input_data_source, 
+        outputSystemCode = output_data_source)
+      return(XrefBatch_results)
       # return(NULL)
     } else if(input$type == "metabolite") {
-        input_data_source <- dataSources$systemCode [dataSources$source == input$inputDataSource]
-        output_data_source <- input$outputDataSource
-        XrefBatch_results <- lapply(identifiersList(), function(identifier) {
-          Xref_metabolite_function(
-            identifier, 
-            inputSystemCode = input_data_source, 
-            outputSystemCode = output_data_source)
-        })
-        return(do.call(rbind, XrefBatch_results))
+      input_data_source <- input$inputDataSource
+      output_data_source <- input$outputDataSource
+      XrefBatch_results <- Xref_function(
+          identifiersList(), 
+          inputSystemCode = input_data_source, 
+          outputSystemCode = output_data_source)
+        return(XrefBatch_results)
     }
   })
   
@@ -536,11 +527,16 @@ server <- function(input, output, session) {
   
   ## Download results
   output$XrefBatch_download <- downloadHandler(
-    filename = "XrefBatch_mapping_BridgeDB-Shiny.csv",
+    filename = function() {
+      paste0("XrefBatch_mapping_BridgeDB-Shiny.", input$XrefBatch_download_format)
+    },
     content = function(file) {
       if(!is.null(XrefBatch_output())) {
-        write.csv(XrefBatch_output(),
-                  file, row.names = FALSE, sep = "\t")
+        write.table(
+          XrefBatch_output(), file, row.names = FALSE, 
+          sep = ifelse(input$XrefBatch_download_format == "tsv", "\t", ","),
+          quote = FALSE
+        )
       }
     }
   )
@@ -567,7 +563,7 @@ server <- function(input, output, session) {
   output$dataSource <- renderUI({
     selectInput(
       inputId = 'sec2priDataSource', 
-      label = 'Select the data source:',
+      label = 'Choose the data source:',
       choices = c("ChEBI", "HMDB", "WikiData", "HGNC"),
       selected = "ChEBI"
     )
@@ -675,14 +671,21 @@ server <- function(input, output, session) {
   
   ## Download results
   output$sec2pri_download <- downloadHandler(
-    filename = "sec2pri_mapping_BridgeDB-Shiny.csv",
+    filename = function() {
+      paste0("sec2pri_mapping_BridgeDB-Shiny.", input$sec2pri_download_format)
+    },
+    # filename = "sec2pri_mapping_BridgeDB-Shiny.csv",
     content = function(file) {
       if(!is.null(sec2pri_output())) {
-        write.csv(sec2pri_output(),
-                  file, row.names = FALSE, sep = "\t")
+        write.csv(
+          sec2pri_output(), file, row.names = FALSE, 
+          sep = ifelse(input$sec2pri_download_format == "tsv", "\t", ","),
+          quote = FALSE
+        )
       }
     }
   )
+  
   observe({
     if(nrow(sec2pri_output()) == 0) {
       shinyjs::disable("sec2pri_download")
@@ -719,7 +722,7 @@ server <- function(input, output, session) {
   output$bridgeDb_logo_wide <- renderImage({
     list(src = "www/logo_BridgeDb_footer.png",
          width = "100%",
-         height = "70px")
+         height = "auto")
   }, deleteFile = F)
   
 }
