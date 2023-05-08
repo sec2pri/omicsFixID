@@ -25,9 +25,9 @@ primaryIDs_HMDB <- HMDB$primaryID
 ## ChEBI
 ChEBI <- data.table::fread("input/ChEBI_secIds.tsv")
 primaryIDs_ChEBI <- ChEBI$primaryID
-## WikiData
-WikiData <- data.table::fread("input/wikidata_secIds.tsv")
-primaryIDs_WikiData <- WikiData$primaryID
+## Wikidata
+Wikidata <- data.table::fread("input/wikidata_secIds.tsv")
+primaryIDs_Wikidata <- Wikidata$primaryID
 ## HGNC
 HGNC.ID <- data.table::fread("input/hgnc.id_secIds.tsv")
 primaryIDs_HGNC.ID <- unlist(data.table::fread("input/hgnc.id_priIds.tsv"), use.names = FALSE)
@@ -47,7 +47,7 @@ piechart_theme <- theme_minimal() +
     axis.text.x = element_blank(),
     axis.text.y = element_text(size = 16),
     plot.title = element_text(size = 16, face = "bold")
-  )
+   )
 
 Xref_function <- function(identifiers, inputSpecies = "Human",
                           inputSystemCode = "HGNC", outputSystemCode = "All") {
@@ -98,6 +98,7 @@ Xref_function <- function(identifiers, inputSpecies = "Human",
   
 }
 
+
 #### Shinny App
 ui <- fluidPage(
   shinyjs::useShinyjs(), # needed for download button to work
@@ -122,7 +123,10 @@ ui <- fluidPage(
              }
              .tab-content {
                padding-top: 0px !important;
-               min-height: 650px;
+               min-height: 570px;
+             }
+             .input-group {
+               margin-bottom: 0px;
              }
          </style>
       ')
@@ -132,23 +136,27 @@ ui <- fluidPage(
   titlePanel(
     div(
       div(
-        strong("BridgeDb-Shiny"),
-        br(),
-        "a user friendly application for identifier mapping",
-        style = "float:left;justify-content: flex-end;"
+        div(
+          h5(""),
+          strong("BridgeDb-Shiny"),
+          style = "float:left;justify-content: flex-end;"
+        ),
+        div(
+          imageOutput("Maastricht_logo"),
+          style = "display: flex; align-items: right; justify-content: flex-end;"
+        ),
+        style = "display:flex; justify-content: space-between;margin: 0px; height: 70px;"
       ),
+      div(style = "margin-top: -15px"),
       div(
-        imageOutput("Maastricht_logo"),
-        style = "display: flex; align-items: right; justify-content: flex-end;"
-        
-      ),
-      style = "display:flex; justify-content: space-between;margin: 0px; height: 100px;"
-      
+        h4("a user friendly application for identifier mapping"),
+        style = "text-align: left;"
+      )
     )
   ),
   # Add a tabset panel with three tabs
   navbarPage(
-    title = "",
+    title = NULL,
     # Tab 1: About
     tabPanel(
       "About", 
@@ -198,7 +206,7 @@ ui <- fluidPage(
                   HTML("<b>HGNC</b>"), ", ",
                   HTML("<b>HMDB</b>"), ", ",
                   HTML("<b>ChEBI</b>"), "and ",
-                  HTML("<b>WikiData</b>"),
+                  HTML("<b>Wikidata</b>"),
                   "which can be converted to the corresponding primary identifier from the initial database.",
                   "After this step, the XrefBatch mapping can be used to convert the primary-ID-enhanced dataset to any other database currently supported by BridgeDb:",
                   tags$ul(
@@ -225,13 +233,15 @@ ui <- fluidPage(
       "XRefBatch mapping", 
       icon = icon("table"),
       div(
-        style = "margin-top: 30px;",
+        style = "margin-top: 15px;",
         # Add a sidebar layout
         sidebarLayout(
           # Add a sidebar panel with input controls
           sidebarPanel(
+            div(style = "margin-top: -10px"),
+            
             # Render the input options for selecting a identifier type
-            radioButtons ("type", "Choose identifier type:", 
+            radioButtons ("type", "Choose identifier type:", inline = TRUE,
                           c ("Gene/Protein" = "gene", "Metabolites" = "metabolite"),
                           selected = "metabolite" 
                           ),
@@ -240,6 +250,7 @@ ui <- fluidPage(
               condition = "input.type == 'gene'",
               uiOutput('inputSpecies')
             ),
+            div(style = "margin-top: -5px"),
             # Add a file input for uploading a text file containing identifiers
             fileInput(
               "XrefBatch_identifiers_file",
@@ -247,19 +258,23 @@ ui <- fluidPage(
               accept = c(".csv", ".xlsx", ".xls", ".tsv", ".txt"),
               placeholder = "Please upload file.."
             ),
+            div(style = "margin-top: -30px"),
             # Add a text area input for entering identifiers
             textAreaInput(
-              'XrefBatch_identifiers', 
-              'or insert identifier(s) here', 
-              value = NULL, 
-              width = NULL, 
+              'XrefBatch_identifiers',
+              'or insert identifier(s) here',
+              value = NULL,
+              width = NULL,
               placeholder = 'one identifier per row'
             ),
+            div(style = "margin-top: -10px"),
             # Render the input options for selecting a data source
             uiOutput('inputDataSource'),
+            div(style = "margin-top: -10px"),
             # Render the input options for selecting an output data source
             uiOutput('outputDataSource'),
             # Add buttons for performing the identifier mapping and clearing the list
+            div(style = "margin-top: -10px"),
             div(
               actionButton(
                 "XrefBatch_get", "Bridge",
@@ -269,37 +284,42 @@ ui <- fluidPage(
                 style = "color: white; background-color: gray; border-color: black"),
               br(),
               br(),
+              div(style = "margin-top: -10px"),
               selectInput(
                 inputId = "XrefBatch_download_format",
                 label = "Choose a download format:",
                 choices = c("csv", "tsv")
               ),
+              div(style = "margin-top: -10px"),
               downloadButton(
                 outputId = "XrefBatch_download", 
                 label = "Download results", 
                 style = "color: white; background-color: gray; border-color: black"
-              )
+              ),
+              div(style = "margin-top: -10px")
             ),
             width = 3
           ),
           # Add a main panel for displaying the bridge list
           mainPanel(
-            div(DTOutput("XrefBatch_mapping_results")),
+            div(DTOutput("XrefBatch_mapping_results", height = "500px")),
             width = 9
           )
         )
-      )
+      ),
+      style = "height: 300px;"
     ),
     # Tab 3: Sec2pri
     tabPanel(
       "Sec2pri mapping", 
       icon = icon("table"),
       div(
-        style = "margin-top: 30px;",
+        style = "margin-top: 15px;",
         # Add a sidebar layout
         sidebarLayout(
           # Add a sidebar panel with input controls
           sidebarPanel(
+            div(style = "margin-top: -10px"),
             # Add a file input for uploading a text file containing identifiers
             fileInput(
               "sec2pri_identifiers_file",
@@ -307,6 +327,7 @@ ui <- fluidPage(
               accept = c(".csv", ".xlsx", ".xls", ".tsv", ".txt"),
               placeholder = "Please upload file.."
             ),
+            div(style = "margin-top: -30px"),
             # Add a text area input for entering identifiers
             textAreaInput(
               'sec2pri_identifiers', 
@@ -315,9 +336,11 @@ ui <- fluidPage(
               width = NULL, 
               placeholder = 'one identifier per row'
             ),
+            div(style = "margin-top: -10px"),
             # Render the input options for selecting a data source
             uiOutput('dataSource'),
             # Add buttons for performing the identifier mapping and clearing the list
+            div(style = "margin-top: -10px"),
             div(
               actionButton(
                 "sec2pri_get", "Bridge",
@@ -327,21 +350,25 @@ ui <- fluidPage(
                 style = "color: white; background-color: gray; border-color: black"),
               br(),
               br(),
+              div(style = "margin-top: -10px"),
               selectInput(
                 inputId = "sec2pri_download_format",
                 label = "Choose a download format:",
                 choices = c("csv", "tsv")
               ),
+              div(style = "margin-top: -10px"),
               downloadButton(
                 outputId = "sec2pri_download",
                 label = "Download results", 
                 style = "color: white; background-color: gray; border-color: black"
-              )
+              ),
+              div(style = "margin-top: -10px")
             ),
             width = 3
           ),
           # Add a main panel for displaying the bridge list
           mainPanel(
+            div(htmlOutput("sec2pri_metadata")),
             div(plotOutput("sec2pri_piechart_results", height = "300px"), class = "my-plot"),
             div(DTOutput("sec2pri_mapping_results"), style = "margin-top: -100px;"),
             width = 9
@@ -354,12 +381,13 @@ ui <- fluidPage(
       "Contact us",
       icon = icon("envelope"),
       div(
-        style = "margin-top: 30px;",
+        style = "margin-top: 15px;",
         # Add a contact us section
         br(),
-        p(strong("For questions and comments:")),
-        p("Tooba Abbassi-Daloii: t.abbassidaloii@maastrichtuniversity.nl"),
-        p("Ozan Cinar: XXX"),
+        p(HTML("<b><span style='font-size:16px;'>For questions and comments:</span></b>")),
+        p(HTML("<b>Tooba Abbassi-Daloii</b>"), ": t.abbassidaloii@maastrichtuniversity.nl"),
+        p(HTML("<b>Ozan Cinar</b>"), ": ozan.cinar@maastrichtuniversity.nl"),
+        br(),
         p("Department Bioinformatics - BiGCaT"),
         p("NUTRIM, Maastricht University, Maastricht, The Netherlands")
       )
@@ -373,6 +401,10 @@ ui <- fluidPage(
     div(
       imageOutput("bridgeDb_logo_wide", height = "70px"),
       style = "background-color: white; text-align: center; padding: 10px;"
+    ),
+    div(
+      p("licensed under the ", a("Apache License, version 2.0", href = "https://www.apache.org/licenses/LICENSE-2.0")),
+      style = "text-align: center; padding: 50px;"
     )
   )
 )
@@ -415,7 +447,7 @@ server <- function(input, output, session) {
         selectInput(
           inputId = 'inputDataSource', 
           label = 'Choose the input data source:',
-          choices = dataSources$source[dataSources$type == "gene"],
+          choices = sort(dataSources$source[dataSources$type == "gene"]),
           selected = "HGNC"
         )
       })
@@ -425,7 +457,7 @@ server <- function(input, output, session) {
         selectInput(
           inputId = 'inputDataSource', 
           label = 'Choose the input data source:',
-          choices = dataSources$source[dataSources$type == "metabolite"],
+          choices = sort(dataSources$source[dataSources$type == "metabolite"]),
           selected = "ChEBI"
         )
       })
@@ -439,7 +471,7 @@ server <- function(input, output, session) {
         selectInput(
           inputId = 'outputDataSource', 
           label = 'Choose one or more output data source:', 
-          choices = c("All", dataSources$source[dataSources$type == "gene"]),
+          choices = c("All", sort(dataSources$source[dataSources$type == "gene"])),
           selected = "Ensembl"
         )
       })
@@ -449,7 +481,7 @@ server <- function(input, output, session) {
         selectInput(
           inputId = 'outputDataSource', 
           label = 'Choose one or more output data source:', 
-          choices = c("All", dataSources$source[dataSources$type == "metabolite"]),
+          choices = c("All", sort(dataSources$source[dataSources$type == "metabolite"])),
           selected = "HMDB"
         )
       })
@@ -513,8 +545,21 @@ server <- function(input, output, session) {
     }
   })
   
+  # Function to clear previous outputs
+  clearPreviousOutputs <- function() {
+    updateTextAreaInput(session, "XrefBatch_identifiers", value = "")
+    XrefBatch_input_file(NULL) # Reset the file input
+    # Reset file input appearance
+    js_reset_file_input <- "$('#XrefBatch_input_file').val(null); $('.custom-file-label').html('Please upload file..');"
+    session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
+    XrefBatch_mapping$XrefBatch_table <- NULL
+  }
+
   XrefBatch_mapping <- reactiveValues(XrefBatch_table = NULL)
   observeEvent(input$XrefBatch_get, {
+    # Clear previous outputs
+    clearPreviousOutputs()
+    
     if(!is.null(XrefBatch_output())) {
       XrefBatch_mapping$XrefBatch_table <- req(
         DT::datatable(XrefBatch_output(),
@@ -556,12 +601,7 @@ server <- function(input, output, session) {
   
   # Handle clearing of input and output
   observeEvent(input$XrefBatch_clear_list, {
-    updateTextAreaInput(session, "XrefBatch_identifiers", value = "")
-    XrefBatch_input_file(NULL) # Reset the file input
-    # Reset file input appearance
-    js_reset_file_input <- "$('#XrefBatch_input_file').val(null); $('.custom-file-label').html('Please upload file..');"
-    session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
-    XrefBatch_mapping$XrefBatch_table <- NULL
+    clearPreviousOutputs()
   })
   
   #sec2pri tab
@@ -570,7 +610,7 @@ server <- function(input, output, session) {
     selectInput(
       inputId = 'sec2priDataSource', 
       label = 'Choose the data source:',
-      choices = c("ChEBI", "HMDB", "WikiData", "HGNC", "HGNC Accession number"),
+      choices = c("ChEBI", "HMDB", "Wikidata", "HGNC", "HGNC Accession number"),
       selected = "ChEBI"
     )
   })
@@ -659,22 +699,38 @@ server <- function(input, output, session) {
     }
   })
   
-  seq2pri_mapping <- reactiveValues(seq2pri_pieChart = NULL, seq2pri_table = NULL)
+  # Function to clear previous outputs
+  clearPreviousSec2priOutputs <- function() {
+    updateTextAreaInput(session, "sec2pri_identifiers", value = "")
+    seq2pri_input_file(NULL) # Reset the file input
+    # Reset file input appearance
+    js_reset_file_input <- "$('#sec2pri_identifiers_file').val(null); $('.custom-file-label').html('Please upload file..');"
+    session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
+    seq2pri_mapping$seq2pri_pieChart <- NULL
+    seq2pri_mapping$seq2pri_table <- NULL
+    seq2pri_mapping$metadata <- NULL
+  }
+  
+  seq2pri_mapping <- reactiveValues(seq2pri_pieChart = NULL, metadata = NULL, seq2pri_table = NULL)
   
   observeEvent(input$sec2pri_get, {
+    # Clear previous outputs
+    clearPreviousSec2priOutputs()
+    
     seq2pri_mapping$seq2pri_pieChart <- 
       # Function to draw the piechart
       ggplot(sec2pri_proportion() [c(-1), ],
              aes(x = type, y = no, fill = type)) +
-        geom_col(position = "dodge") +
+        geom_col(position = position_dodge2(padding = 0, width=0.5), width = 0.5) +
         scale_fill_brewer(palette = "Blues") +
         coord_flip() +
         piechart_theme + 
-        ggtitle(paste0(sec2pri_proportion()$no[1], " (unique) input identifiers")) +
+        ggtitle(ifelse(is.na(sec2pri_proportion()$no[1]), "No input provided",
+                             paste0(sec2pri_proportion()$no[1], " (unique) input identifiers"))) +
         geom_text(aes(y = no, label = no), size = 6,
                   position = position_stack(vjust = .5)) +
-        theme(plot.margin = unit(c(1, 1, -0.5, 1), "cm")) 
-      
+        theme(plot.margin = unit(c(1, 1, -0.5, 1), "cm"))
+
     if(nrow(sec2pri_output()) != 0) {
       seq2pri_mapping$seq2pri_table <- req(
         DT::datatable(sec2pri_output(),
@@ -687,9 +743,11 @@ server <- function(input, output, session) {
   }, ignoreInit = TRUE)
   
   # Update output display
-  output$sec2pri_mapping_results <- renderDT({
-    seq2pri_mapping$seq2pri_table
-  })
+  output$sec2pri_mapping_results <-
+    renderDT({
+      seq2pri_mapping$seq2pri_table
+    })
+
   
   ## Download results
   output$sec2pri_download <- downloadHandler(
@@ -716,21 +774,27 @@ server <- function(input, output, session) {
     }
   })
   
-  
+
   output$sec2pri_piechart_results <- renderPlot({
     seq2pri_mapping$seq2pri_pieChart
   },  height = 200, width = 400)
   
+  observeEvent(input$sec2pri_get, {
+    output$sec2pri_metadata <-  
+      if(grepl("HGNC", input$sec2priDataSource) & nrow(sec2pri_output()) != 0){
+        renderText(HTML("The data was obtained from the <a href='https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/archive/monthly/tsv/' target='_blank'>HGNC database</a> in its monthly release of <b>May 2023</b>."))
+      } else if (grepl("HMDB", input$sec2priDataSource) & nrow(sec2pri_output()) != 0){
+        renderText(HTML("The data was obtained from the <a href='https://hmdb.ca/downloads' target='_blank'>HMDB database</a> (version 5.0) released on <b>November 2021</b>."))
+      } else if (grepl("ChEBI", input$sec2priDataSource) & nrow(sec2pri_output()) != 0){
+        renderText(HTML("The data was obtained from the <a href='https://ftp.ebi.ac.uk/pub/databases/chebi/archive/rel211/SDF/' target='_blank'>ChEBI database</a> (rel211) released on <b>June 2022</b>."))
+      } else if (grepl("Wikidata", input$sec2priDataSource) & nrow(sec2pri_output()) != 0){
+        renderText(HTML("The data was obtained from the <a href='https://query.wikidata.org/' target='_blank'>Wikidata database</a> on <b>July 30, 2022</b>."))
+      } 
+  })
+  
   # Handle clearing of input and output
   observeEvent(input$sec2pri_clear_list, {
-    updateTextAreaInput(session, "sec2pri_identifiers", value = "")
-    seq2pri_input_file(NULL) # Reset the file input
-    # Reset file input appearance
-    js_reset_file_input <- "$('#sec2pri_identifiers_file').val(null); $('.custom-file-label').html('Please upload file..');"
-    session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
-    
-    seq2pri_mapping$seq2pri_pieChart <- NULL
-    seq2pri_mapping$seq2pri_table <- NULL
+    clearPreviousSec2priOutputs()
   })
   
   # add BridgeDb logo (in the text)
