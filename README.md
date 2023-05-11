@@ -18,7 +18,7 @@ After mapping identifiers from one database to another, integrating data can rem
 
 These tools currently do not have an API or other form of programmatic access, leading to issues in big OMICS data analysis.
 
-### BridgeDb-Shiny ([shiny.bridgedb.org)](shiny.bridgedb.org)
+### BridgeDb-Shiny ([shiny.bridgedb.org](https://tabbassidaloii.shinyapps.io/BridgeDb-Shiny/))
 To address the challenges of integrating data from different biological sources that contain secondary identifiers, we developed a user-friendly Shiny app called BridgeDb-Shiny, which provides two key functions:
 
 1. XRefBatch mapping:
