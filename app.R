@@ -47,7 +47,7 @@ piechart_theme <- theme_minimal() +
     axis.text.x = element_blank(),
     axis.text.y = element_text(size = 16),
     plot.title = element_text(size = 16, face = "bold")
-   )
+  )
 
 Xref_function <- function(identifiers, inputSpecies = "Human",
                           inputSystemCode = "HGNC", outputSystemCode = "All") {
@@ -97,7 +97,6 @@ Xref_function <- function(identifiers, inputSpecies = "Human",
   }
   
 }
-
 
 #### Shinny App
 ui <- fluidPage(
@@ -149,7 +148,7 @@ ui <- fluidPage(
       ),
       div(style = "margin-top: -15px"),
       div(
-        h4("a user friendly application for identifier mapping"),
+        h4("A user friendly application for identifier mapping"),
         style = "text-align: left;"
       )
     )
@@ -428,7 +427,7 @@ server <- function(input, output, session) {
         selectInput(
           inputId = 'inputSpecies',
           label = 'Choose species:',
-          choices = c("Human", "Mouse", "Rat"),
+          choices = c("Human"),
           selected = "Human"
         )
       })
@@ -545,21 +544,8 @@ server <- function(input, output, session) {
     }
   })
   
-  # Function to clear previous outputs
-  clearPreviousOutputs <- function() {
-    updateTextAreaInput(session, "XrefBatch_identifiers", value = "")
-    XrefBatch_input_file(NULL) # Reset the file input
-    # Reset file input appearance
-    js_reset_file_input <- "$('#XrefBatch_input_file').val(null); $('.custom-file-label').html('Please upload file..');"
-    session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
-    XrefBatch_mapping$XrefBatch_table <- NULL
-  }
-
-  XrefBatch_mapping <- reactiveValues(XrefBatch_table = NULL)
+ XrefBatch_mapping <- reactiveValues(XrefBatch_table = NULL)
   observeEvent(input$XrefBatch_get, {
-    # Clear previous outputs
-    clearPreviousOutputs()
-    
     if(!is.null(XrefBatch_output())) {
       XrefBatch_mapping$XrefBatch_table <- req(
         DT::datatable(XrefBatch_output(),
@@ -573,7 +559,11 @@ server <- function(input, output, session) {
   
   # Update output display
   output$XrefBatch_mapping_results <- renderDT({
-    XrefBatch_mapping$XrefBatch_table
+    if (length(identifiersList()) != 0) {
+      XrefBatch_mapping$XrefBatch_table
+    } else {
+      NULL
+    }
   })
   
   ## Download results
@@ -601,7 +591,12 @@ server <- function(input, output, session) {
   
   # Handle clearing of input and output
   observeEvent(input$XrefBatch_clear_list, {
-    clearPreviousOutputs()
+    updateTextAreaInput(session, "XrefBatch_identifiers", value = "")
+    XrefBatch_input_file(NULL) # Reset the file input
+    # Reset file input appearance
+    js_reset_file_input <- "$('#XrefBatch_input_file').val(null); $('.custom-file-label').html('Please upload file..');"
+    session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
+    XrefBatch_mapping$XrefBatch_table <- NULL
   })
   
   #sec2pri tab
@@ -615,6 +610,16 @@ server <- function(input, output, session) {
     )
   })
   
+  # Update the TextArea based on the selected database
+  observeEvent(input$sec2priDataSource, {
+    updateTextAreaInput(session, "sec2pri_identifiers", value = ifelse(input$sec2priDataSource == "HGNC", "HOXA11\nHOX12\nCD31", 
+                                                                       ifelse(input$sec2priDataSource == "HGNC Accession number","HGNC:24\nHGNC:32\nHGNC:13349\nHGNC:7287\n",
+                                                                              ifelse(input$sec2priDataSource == "HMDB","HMDB0000005\nHMDB0004990\nHMDB60172\nHMDB00016",
+                                                                                     ifelse(input$sec2priDataSource == "ChEBI", "CHEBI:20245\nCHEBI:136845\nCHEBI:656608\nCHEBI:4932",
+                                                                                            ifelse(input$sec2priDataSource == "Wikidata","Q422964\nQ65174948\nQ25436441",""))))))
+  })
+  
+  #Check the input
   seq2pri_input_file <- reactiveVal(NULL)
   observeEvent(input$sec2pri_identifiers_file, {
     if(!is.null(input$sec2pri_identifiers_file)){
@@ -622,7 +627,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # Function to make a vector for input identifiers
+  #Function to make a vector for input identifiers
   secIdentifiersList <- reactive({
     if(!is.null(seq2pri_input_file())){
       print("Reading identifiers from file...")
@@ -647,7 +652,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # Function to calculate the proportion of primary and secondary identifiers in the input table
+  # Function to calculate the number of primary and secondary identifiers in the input table
   sec2pri_proportion <- reactive({
     req(input$sec2priDataSource) 
     if(!is.null(input$sec2pri_identifiers_file) | !is.null(input$sec2pri_identifiers)) {
@@ -664,11 +669,11 @@ server <- function(input, output, session) {
                  "#secondary IDs", 
                  "#unknown"),
         no = c(length(unique(secIdentifiersList())),
-               length(intersect(secIdentifiersList(), priID_list)),
-               length(intersect(secIdentifiersList(), dataset$secondaryID)),
+               length(intersect(unique(secIdentifiersList()), priID_list)),
+               length(intersect(unique(secIdentifiersList()), dataset$secondaryID)),
                length(unique(secIdentifiersList())) - 
-                 (length(intersect(secIdentifiersList(), priID_list)) +
-                    length(intersect(secIdentifiersList(), dataset$secondaryID)))
+                 (length(intersect(unique(secIdentifiersList()), priID_list)) +
+                    length(intersect(unique(secIdentifiersList()), dataset$secondaryID)))
         )
       )# %>% mutate(prop = no/length(unique(secIdentifiersList())))
       return(proportion_table[proportion_table$no != 0, ])
@@ -699,29 +704,14 @@ server <- function(input, output, session) {
     }
   })
   
-  # Function to clear previous outputs
-  clearPreviousSec2priOutputs <- function() {
-    updateTextAreaInput(session, "sec2pri_identifiers", value = "")
-    seq2pri_input_file(NULL) # Reset the file input
-    # Reset file input appearance
-    js_reset_file_input <- "$('#sec2pri_identifiers_file').val(null); $('.custom-file-label').html('Please upload file..');"
-    session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
-    seq2pri_mapping$seq2pri_pieChart <- NULL
-    seq2pri_mapping$seq2pri_table <- NULL
-    seq2pri_mapping$metadata <- NULL
-  }
-  
   seq2pri_mapping <- reactiveValues(seq2pri_pieChart = NULL, metadata = NULL, seq2pri_table = NULL)
   
   observeEvent(input$sec2pri_get, {
-    # Clear previous outputs
-    clearPreviousSec2priOutputs()
-    
     seq2pri_mapping$seq2pri_pieChart <- 
       # Function to draw the piechart
       ggplot(sec2pri_proportion() [c(-1), ],
              aes(x = type, y = no, fill = type)) +
-        geom_col(position = position_dodge2(padding = 0, width=0.5), width = 0.5) +
+        geom_col(position = position_dodge(0.9), width = 0.9) +
         scale_fill_brewer(palette = "Blues") +
         coord_flip() +
         piechart_theme + 
@@ -743,10 +733,15 @@ server <- function(input, output, session) {
   }, ignoreInit = TRUE)
   
   # Update output display
-  output$sec2pri_mapping_results <-
+  output$sec2pri_mapping_results <- 
     renderDT({
-      seq2pri_mapping$seq2pri_table
+      if (length(secIdentifiersList()) != 0) {
+        seq2pri_mapping$seq2pri_table
+      } else {
+        NULL
+      }
     })
+
 
   
   ## Download results
@@ -757,8 +752,38 @@ server <- function(input, output, session) {
     # filename = "sec2pri_mapping_BridgeDB-Shiny.csv",
     content = function(file) {
       if(!is.null(sec2pri_output())) {
+        if(input$sec2priDataSource == "HGNC Accession number"){
+          priID_list = primaryIDs_HGNC.ID
+          dataset = HGNC.ID
+        } else {
+          priID_list = get(paste0("primaryIDs_", input$sec2priDataSource))
+          dataset = get(input$sec2priDataSource)
+        }
+        primaryIDs <- intersect(unique(secIdentifiersList()), priID_list)
+        unknownIDs <- unique(secIdentifiersList())[!unique(secIdentifiersList()) %in%
+                                                     c(priID_list, dataset$secondaryID)]
+        if(grepl("HGNC", input$sec2priDataSource)){
+          output <- rbind(
+            sec2pri_output(),
+            data.frame(identifier = primaryIDs,
+                       `primary ID` = primaryIDs,
+                       comment = rep("", length(primaryIDs)), check.names = FALSE),
+            data.frame(identifier = unknownIDs,
+                       `primary ID` = rep("", length(unknownIDs)),
+                       comment = rep("Unknown", length(unknownIDs)), check.names = FALSE)
+            
+          )
+        } else {
+          output <- rbind(
+            sec2pri_output(),
+            data.frame(identifier = primaryIDs,`primary ID` = primaryIDs, check.names = FALSE),
+            data.frame(identifier = unknownIDs,`primary ID` = rep(NA, length(unknownIDs)), check.names = FALSE)
+          ) %>%
+            mutate(comment = ifelse(identifier %in% unknownIDs, "Unknown", ""))
+        }
+        
         write.table(
-          sec2pri_output(), file, row.names = FALSE, 
+          output, file, row.names = FALSE, 
           sep = ifelse(input$sec2pri_download_format == "tsv", "\t", ","),
           quote = FALSE
         )
@@ -794,7 +819,14 @@ server <- function(input, output, session) {
   
   # Handle clearing of input and output
   observeEvent(input$sec2pri_clear_list, {
-    clearPreviousSec2priOutputs()
+    updateTextAreaInput(session, "sec2pri_identifiers", value = "")
+    # Reset file input appearance
+    seq2pri_input_file(NULL) # Reset the file input
+    js_reset_file_input <- "$('#sec2pri_identifiers_file').val(null); $('.custom-file-label').html('Please upload file..');"
+    session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
+    seq2pri_mapping$seq2pri_pieChart <- NULL
+    seq2pri_mapping$metadata <- NULL
+    seq2pri_mapping$seq2pri_table <- NULL
   })
   
   # add BridgeDb logo (in the text)
