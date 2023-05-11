@@ -11,14 +11,14 @@ BridgeDb (bridgedb.org) is an open source tool introduced in 2010 that connects 
 - and example code for Matlab integration through the webservice.
 
 ### The secondary identifier challenge
-After mapping identifiers from one database to another, integrating data can remain a challenge due to the presence of retired, deleted, split, and/or merged identifiers currently present in databases and datasets alike. These outdated identifiers are called ìsecondaryî while the identifiers currently supported by databases are referred to as ìprimaryî . The presence of secondary identifiers in a used dataset or database can lead to information loss and hinders effective data integration. While some tools exist to convert secondary identifiers to current ones, these tools only support one type of data (either genes/proteins or metabolites):
+After mapping identifiers from one database to another, integrating data can remain a challenge due to the presence of retired, deleted, split, and/or merged identifiers currently present in databases and datasets alike. These outdated identifiers are called ‚Äúsecondary‚Äù while the identifiers currently supported by databases are referred to as ‚Äúprimary‚Äù . The presence of secondary identifiers in a used dataset or database can lead to information loss and hinders effective data integration. While some tools exist to convert secondary identifiers to current ones, these tools only support one type of data (either genes/proteins or metabolites):
 
 - https://www.genenames.org/tools/multi-symbol-checker/
 - https://www.metaboanalyst.ca/MetaboAnalyst/upload/ConvertView.xhtml
 
 These tools currently do not have an API or other form of programmatic access, leading to issues in big OMICS data analysis.
 
-### [BridgeDb-Shiny]( https://tabbassidaloii.shinyapps.io/BridgeDb-Shiny/)
+### BridgeDb-Shiny ([shiny.bridgedb.org)](shiny.bridgedb.org)
 To address the challenges of integrating data from different biological sources that contain secondary identifiers, we developed a user-friendly Shiny app called BridgeDb-Shiny, which provides two key functions:
 
 1. XRefBatch mapping:
