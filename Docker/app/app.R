@@ -19,6 +19,36 @@ library(rjson)
 #Reading the required files
 dataSources <- data.table::fread("input/dataSource.csv")
 
+#Define a function for adding mapping cardinality
+add_mapping_cardinality <- function(dataFile) {
+  
+  # Calculate counts
+  dataFile <- dataFile %>%
+    group_by(primaryID) %>% 
+    mutate(count_primaryID = n(),
+           count_primaryID = ifelse(primaryID == "Entry Withdrawn", 0, count_primaryID)) %>%
+    group_by(secondaryID) %>% 
+    mutate(count_secondaryID = n()) %>%
+    ungroup()
+  
+  # Add mapping_cardinality_sec2pri column
+  dataFile <- dataFile %>%
+    mutate(mapping_cardinality_sec2pri = ifelse(count_secondaryID == 1 & count_primaryID == 1,
+                                                "1:1", ifelse(
+                                                  count_secondaryID > 1 & count_primaryID == 1,
+                                                  "1:n", ifelse(
+                                                    count_secondaryID == 1 & count_primaryID > 1,
+                                                    "n:1", ifelse(
+                                                      count_secondaryID == 1 & count_primaryID == 0,
+                                                      "1:0", ifelse(
+                                                        count_secondaryID > 1 & count_primaryID > 1,
+                                                        "n:n", NA
+                                                      ))))))
+  # Return the updated data
+  return(select(dataFile, -c(count_primaryID, count_secondaryID)))
+}
+
+
 ## HMDB
 HMDB <- data.table::fread("input/hmdb_secIds.tsv")
 primaryIDs_HMDB <- HMDB$primaryID
@@ -33,6 +63,7 @@ HGNC.ID <- data.table::fread("input/hgnc.id_secIds.tsv")
 primaryIDs_HGNC.ID <- unlist(data.table::fread("input/hgnc.id_priIds.tsv"), use.names = FALSE)
 HGNC <- data.table::fread("input/hgnc.symbol_secIds.tsv")
 primaryIDs_HGNC <- unlist(data.table::fread("input/hgnc.symbol_priIds.tsv"), use.names = FALSE)
+
 
 options(rsconnect.max.bundle.files = 3145728000)
 
@@ -49,6 +80,7 @@ piechart_theme <- theme_minimal() +
     plot.title = element_text(size = 16, face = "bold")
   )
 
+# define a function for XrefBatch mapping
 Xref_function <- function(identifiers, inputSpecies = "Human",
                           inputSystemCode = "HGNC", outputSystemCode = "All") {
   
@@ -97,6 +129,42 @@ Xref_function <- function(identifiers, inputSpecies = "Human",
   }
   
 }
+
+# Xref_metabolite_function <- function(query, 
+#                                      inputSystemCode = "Ch", outputSystemCode = "All") {
+#   
+#   # Preparing the query link.
+#   ## Setting up the query url.
+#   url <- "https://webservice.bridgedb.org/Human"
+#   if(outputSystemCode == "All") {
+#     query_link  <- paste(url, "xrefs", inputSystemCode, query, sep = "/")
+#   } else {
+#     query_link  <- paste(url, "xrefs", inputSystemCode, query, outputSystemCode, sep = "/")
+#   }
+#   
+#   
+#   # Getting the response to the query.
+#   q_res <- GET(query_link)
+#   
+#   # Extracting the content in the raw text format.
+#   dat <- content(q_res, as = "text")
+#   
+#   if(dat == "{}") {
+#     warning(paste0("The query did not return a response."))
+#   }
+#   
+#   # Processing the raw content to get a data frame.
+#   dat <- as.data.frame(strsplit(dat, ",")[[1]])
+#   dat <- unlist(apply(dat, 1, strsplit, '":"'))
+#   dat <- matrix(dat, ncol = 2, byrow = TRUE)
+#   dat <- gsub('^[^:]*:|[{}\\\\/""]', "", dat)
+#   dat <- data.frame (identifier = rep(query, nrow(dat)),
+#                      target = dat[,1],
+#                      source = dat[,2])
+#   
+#   return(dat)
+#   
+# }
 
 #### Shinny App
 ui <- fluidPage(
@@ -544,7 +612,17 @@ server <- function(input, output, session) {
     }
   })
   
- XrefBatch_mapping <- reactiveValues(XrefBatch_table = NULL)
+  # Function to clear previous outputs
+  # clearPreviousOutputs <- function() {
+  #   updateTextAreaInput(session, "XrefBatch_identifiers", value = "")
+  #   XrefBatch_input_file(NULL) # Reset the file input
+  #   # Reset file input appearance
+  #   js_reset_file_input <- "$('#XrefBatch_input_file').val(null); $('.custom-file-label').html('Please upload file..');"
+  #   session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
+  #   XrefBatch_mapping$XrefBatch_table <- NULL
+  # }
+
+  XrefBatch_mapping <- reactiveValues(XrefBatch_table = NULL)
   observeEvent(input$XrefBatch_get, {
     if(!is.null(XrefBatch_output())) {
       XrefBatch_mapping$XrefBatch_table <- req(
@@ -704,6 +782,16 @@ server <- function(input, output, session) {
     }
   })
   
+  # Function to clear previous outputs
+  # clearPreviousSec2priOutputs <- function() {
+  #   updateTextAreaInput(session, "sec2pri_identifiers", value = "")
+  #   # Reset file input appearance
+  #   js_reset_file_input <- "$('#sec2pri_identifiers_file').val(null); $('.custom-file-label').html('Please upload file..');"
+  #   session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
+  #   seq2pri_mapping$seq2pri_pieChart <- NULL
+  #   seq2pri_mapping$metadata <- NULL
+  # }
+  
   seq2pri_mapping <- reactiveValues(seq2pri_pieChart = NULL, metadata = NULL, seq2pri_table = NULL)
   
   observeEvent(input$sec2pri_get, {
@@ -807,7 +895,7 @@ server <- function(input, output, session) {
   observeEvent(input$sec2pri_get, {
     output$sec2pri_metadata <-  
       if(grepl("HGNC", input$sec2priDataSource) & nrow(sec2pri_output()) != 0){
-        renderText(HTML("The data was obtained from the <a href='https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/archive/monthly/tsv/' target='_blank'>HGNC database</a> in its monthly release of <b>May 2023</b>."))
+        renderText(HTML("The data was obtained from the <a href='https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/archive/monthly/tsv/' target='_blank'>HGNC database</a> in its monthly release of <b>June 2023</b>."))
       } else if (grepl("HMDB", input$sec2priDataSource) & nrow(sec2pri_output()) != 0){
         renderText(HTML("The data was obtained from the <a href='https://hmdb.ca/downloads' target='_blank'>HMDB database</a> (version 5.0) released on <b>November 2021</b>."))
       } else if (grepl("ChEBI", input$sec2priDataSource) & nrow(sec2pri_output()) != 0){
