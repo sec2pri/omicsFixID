@@ -1,6 +1,6 @@
 # HMDB Metabolites XML Processing
 
-This repository contains instructions for processing the HMDB Metabolites XML file. The **current version is 5.0, released on 2021-11-17** (see (here)[https://hmdb.ca/downloads/], Metabolite and Protein Data (in XML format), All Metabolites file).
+This repository contains instructions for processing the HMDB Metabolites XML file. The **current version is 5.0, released on 2021-11-17** (see [here](https://hmdb.ca/downloads/), Metabolite and Protein Data (in XML format), All Metabolites file).
 
 ## Steps
 
