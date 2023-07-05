@@ -18,4 +18,4 @@ gunzip ChEBI_complete_3star.sdf.gz
 Both Java and R scripts can be used to process the split SDF files and create the prossesed mapping files. Java is recommended for faster processing. Refer to the links below for more information on using Java or R scripts.
 
 - [Java Processing Scripts](https://github.com/tabbassidaloii/create-bridgedb-secondary2primary/blob/d8933f2eec4c8af1f2eb31bb1ee94d15869d147a/src/org/bridgedb/sec2pri/ChEBI_SDF_sec2pri.java), also creates a derby file. The input for this script is the zip file.
-- [R Processing Scripts](https://github.com/tabbassidaloii/BridgeDb-Shiny/tree/main/datasources/ChEBI_processing.R), the input for this script is the "hmdb" directory.  
+- [R Processing Scripts](https://github.com/tabbassidaloii/BridgeDb-Shiny/blob/main/Docker/app/datasources/ChEBI_processing.R), the input for this script is the "hmdb" directory.  

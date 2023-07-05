@@ -5,7 +5,7 @@ library(xml2)
 # Set variables
 sourceName <- "hmdb"
 DbVersion <- "1.0.0"
-inputDir <- "input"
+inputDir <- "datasources/input_raw_files/"
 
 # Create output directory
 outputDir <- "datasources/processed_mapping_files"
@@ -24,7 +24,7 @@ counter <- 0
 counter2 <- 0
 
 # read HMDB XML files
-folder_path <- "datasources/input_raw_files/hmdb/hmdb_metabolites_split/hmdb/"
+folder_path <- paste0(inputDir, sourceName, "/hmdb_metabolites_split/hmdb/")
 entries <- list.files(folder_path)
 
 # Iterate through the folder

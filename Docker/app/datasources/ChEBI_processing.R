@@ -5,9 +5,10 @@ library(readr)
 # Set variables
 sourceName <- "ChEBI"
 DbVersion <- "1.0.0"
+inputDir <- "datasources/input_raw_files/"
 
 # Create output directory
-outputDir <- "datasources\processed_mapping_files"
+outputDir <- "datasources/processed_mapping_files"
 dir.create(outputDir, showWarnings = FALSE)
 
 # Create output tsv mapping files
@@ -30,7 +31,7 @@ counter <- 0
 counter2 <- 0
 
 # read ChEBI SDF file
-file <- read_lines(paste(inputDir, sourceName, "ChEBI_complete_3star.sdf", sep = "/"))
+file <- read_lines(paste(inputDir, sourceName, "/ChEBI_complete_3star.sdf", sep = "/"))
 
 # Iterate through the file
 for (i in seq_along(file)) {
