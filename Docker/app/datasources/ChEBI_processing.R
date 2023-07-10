@@ -24,8 +24,8 @@ colnames(listOfsec2pri) <- column_names
 
 # Name to synonyms
 column_names <- c("primaryID", "name", "synonym")
-listOfname2symbol <- data.frame(matrix(ncol = 3, nrow = 0))  # dataset of the name to symbol
-colnames(listOfname2symbol) <- column_names
+listOfname2synonym <- data.frame(matrix(ncol = 3, nrow = 0))  # dataset of the name to synonym
+colnames(listOfname2synonym) <- column_names
 
 counter <- 0
 counter2 <- 0
@@ -71,15 +71,15 @@ for (i in seq_along(file)) {
     syn <- dataRow
     
     if (is.null(dataRow) && dataRow == "") {
-      listOfname2symbol <- rbind(listOfname2symbol, c (priId, name, NA))
+      listOfname2synonym <- rbind(listOfname2synonym, c (priId, name, NA))
     } else {
-      listOfname2symbol <- rbind(listOfname2symbol, c (priId, name, syn))
+      listOfname2synonym <- rbind(listOfname2synonym, c (priId, name, syn))
     }
     
     dataRow <- file[i + 2]
     while (!is.null(dataRow) && dataRow != "") {
       syn <- dataRow
-      listOfname2symbol <- rbind(listOfname2symbol, c (priId, name, syn))
+      listOfname2synonym <- rbind(listOfname2synonym, c (priId, name, syn))
       dataRow <- file[i + 1]
       i <- i + 1
     }
@@ -100,6 +100,6 @@ write.table(listOfpri, output_pri_Tsv, sep = "\t", row.names = FALSE)
 output_sec2pri_Tsv <- file.path(outputDir, paste(sourceName, "_secID2priID_v", DbVersion, ".tsv", sep = ""))
 write.table(listOfsec2pri, output_sec2pri_Tsv, sep = "\t", row.names = FALSE)
 
-output_name_Tsv <- file.path(outputDir, paste(sourceName, "_name2symbol_v", DbVersion, ".tsv", sep = ""))
-write.table(listOfname2symbol, output_name_Tsv, sep = "\t", row.names = FALSE)
+output_name_Tsv <- file.path(outputDir, paste(sourceName, "_name2synonym_v", DbVersion, ".tsv", sep = ""))
+write.table(listOfname2synonym, output_name_Tsv, sep = "\t", row.names = FALSE)
 

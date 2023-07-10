@@ -18,7 +18,7 @@ listOfpri <- list()
 # Secondary to primary ID
 listOfsec2pri <- list()
 # Name to synonyms
-listOfname2symbol <- list()
+listOfname2synonym <- list()
 
 counter <- 0
 counter2 <- 0
@@ -54,22 +54,22 @@ for (entry in entries) {
         }
     
     # Extract metabolite name
-    priSymbolNode <- "name"
-    priSymbolList <- xml_find_all(document, priSymbolNode)
-    priSymbol <- xml_text(priSymbolList)
+    priNameNode <- "name"
+    priNameList <- xml_find_all(document, priNameNode)
+    priName <- xml_text(priNameList)
       
     # Extract synonyms
-    secSymbolNode <- "synonyms"
-    secSymbolList <- xml_find_all(document, secSymbolNode)
-    secSymbolValues <- unlist(lapply(xml_children(secSymbolList), function(node) xml_text(node)))
+    secSynonymNode <- "synonyms"
+    secSynonymList <- xml_find_all(document, secSynonymNode)
+    secSynonymValues <- unlist(lapply(xml_children(secSynonymList), function(node) xml_text(node)))
       
-    if (is.null(secSymbolValues)) {
-      listOfname2symbol <- c(listOfname2symbol, list(c(priId, priSymbol, NA)))
-      } else if (length(secSymbolValues) == 1) {
-        listOfname2symbol <- c(listOfname2symbol, list(c(priId, priSymbol, secSymbolValues)))
-        } else if (length(secSymbolValues) > 1){
-          for (syn in secSymbolValues) {
-            listOfname2symbol <- c(listOfname2symbol, list(c(priId, priSymbol, syn)))
+    if (is.null(secSynonymValues)) {
+      listOfname2synonym <- c(listOfname2synonym, list(c(priId, priName, NA)))
+      } else if (length(secSynonymValues) == 1) {
+        listOfname2synonym <- c(listOfname2synonym, list(c(priId, priName, secSynonymValues)))
+        } else if (length(secSynonymValues) > 1){
+          for (syn in secSynonymValues) {
+            listOfname2synonym <- c(listOfname2synonym, list(c(priId, priName, syn)))
           }
         }
     
@@ -91,7 +91,7 @@ write.table(do.call(rbind, listOfpri), output_pri_Tsv, sep = "\t", row.names = F
 output_sec2pri_Tsv <- file.path(outputDir, paste(sourceName, "_secID2priID_v", DbVersion, ".tsv", sep = ""))
 write.table(do.call(listOfsec2pri), output_sec2pri_Tsv, sep = "\t", row.names = FALSE)
   
-output_name_Tsv <- file.path(outputDir, paste(sourceName, "_name2symbol_v", DbVersion, ".tsv", sep = ""))
-write.table(do.call(listOfname2symbol), output_name_Tsv, sep = "\t", row.names = FALSE)
+output_name_Tsv <- file.path(outputDir, paste(sourceName, "_name2synonym_v", DbVersion, ".tsv", sep = ""))
+write.table(do.call(listOfname2synonym), output_name_Tsv, sep = "\t", row.names = FALSE)
   
   

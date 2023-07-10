@@ -1,0 +1,51 @@
+source,systemCode,Comments,to_map,type
+MeSH,Me,,mesh,metabolite
+Ensembl,En,,ensembl,gene
+Entrez Gene,L,,ncbigene,gene
+HGNC,H,Homo sapiens,hgnc.symbol,gene
+HGNC Accession number,Hac,Homo sapiens,hgnc,gene
+MGI,M,Mus musculus,mgi,gene
+miRBase mature sequence,Mbm,,mirbase.mature,gene
+miRBase Sequence,Mb,,mirbase,gene
+RefSeq,Q,,refseq,gene
+Rfam,Rf,,rfam,gene
+RGD,R,Rattus norvegicus,rgd,gene
+SGD,D,Saccharomyces cerevisiae,sgd,gene
+TAIR,A,Arabidopsis thaliana,tair.locus,gene
+UCSC Genome Browser,Uc,,ucsc,gene
+OMIM,Om,,omim,gene
+AOP-Wiki Stressor,AopS,,aop.stressor,metabolite
+BRENDA Ligands,Brl,,brenda.ligand,metabolite
+CAS,Ca,,cas,metabolite
+ChEMBL compound,Cl,,chembl.compound,metabolite
+ChEBI,Ce,,chebi,metabolite
+Chemspider,Cs,,chemspider,metabolite
+DrugBank,Dr,,drugbank,metabolite
+EPA CompTox,Ect,,comptox,metabolite
+Guide to Pharmacology Targets,Gpt,,iuphar.ligand,metabolite
+HMDB,Ch,,hmdb,metabolite
+InChIKey,Ik,,inchikey,metabolite
+KEGG Compound,Ck,,kegg.compound,metabolite
+KEGG Drug,Kd,,kegg.drug,metabolite
+KEGG Glycan,Kl,,kegg.glycan,metabolite
+KNApSAcK,Cks,,knapsack,metabolite
+LIPID MAPS,Lm,,lipidmaps,metabolite
+LipidBank,Lb,,lipidbank,metabolite
+MetaboLights Compounds,Ml,,metabolights,metabolite
+PharmGKB Drug,Pgd,,pharmgkb.drug,metabolite
+PubChem-bioassay,Cpb,,pubchem.bioassay,metabolite
+PubChem-compound,Cpc,,pubchem.compound,metabolite
+PubChem-substance,Cps,,pubchem.substance,metabolite
+SwissLipids,Sl,,swisslipid,metabolite
+TTD Drug,Td,,ttd.drug,metabolite
+VMH metabolite,VmhM,,vmhmetabolite,metabolite
+Wikidata,Wd,,wikidata,metabolite 
+GeneOntology,T,,go,gene
+Affy,X,,affy.probeset,gene
+Agilent,Ag,,agilent.probe,gene
+Illumina,Il,,illumina.probe,gene
+NCBI Protein,Np,,ncbiprotein,gene
+PDB,Pd,,pdb,gene
+Pfam,Pf,,pfam,gene
+Uniprot-TrEMBL,S,,uniprot,gene
+WikiGenes,Wg,,wikigenes,gene
