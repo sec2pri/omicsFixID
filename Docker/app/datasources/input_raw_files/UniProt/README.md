@@ -14,7 +14,7 @@ Release:     2023_03 of 28-Jun-2023
 Release:     28-Jun-2023
 
 ## Processing Scripts
-To download and process the TSV files and create the processed mapping files, you can use R scripts. For detailed information on using R scripts, please refer to the following link:
+To download and process the fasta and txt files and create the processed mapping files, you can use R scripts. For detailed information on using R scripts, please refer to the following link:
 
 - [R Processing Scripts](https://github.com/tabbassidaloii/BridgeDb-Shiny/blob/main/Docker/app/datasources/UniProt_processing.R).  
 
