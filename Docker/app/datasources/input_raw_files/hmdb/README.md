@@ -6,7 +6,7 @@ This repository contains instructions for processing the HMDB Metabolites XML fi
 
 1. Download the HMDB Metabolites XML file:
 ```bash
-wget wget http://www.hmdb.ca/system/downloads/current/hmdb_metabolites.zip
+wget http://www.hmdb.ca/system/downloads/current/hmdb_metabolites.zip
 ```
 
 2. Unzip the downloaded file:

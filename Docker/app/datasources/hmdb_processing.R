@@ -11,7 +11,7 @@ inputDir <- "datasources/input_raw_files/"
 outputDir <- "datasources/processed_mapping_files"
 dir.create(outputDir, showWarnings = FALSE)
 
-# Create output tsv mapping files
+# Create list to save the mapping data
 
 # Primary ID
 listOfpri <- list()

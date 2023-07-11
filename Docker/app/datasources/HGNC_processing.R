@@ -91,7 +91,7 @@ hgnc_WDN <- hgnc_WDN %>%
 
 # Write output TSV file for secondary to primary ID mapping
 output_sec2pri_Tsv <- file.path(outputDir, paste(sourceName, "_secID2priID_v", DbVersion, ".tsv", sep = ""))
-write.table(hgnc_WDN, output_sec2pri_Tsv, sep = "\t", row.names = FALSE)
+write.table(hgnc_WDN, output_sec2pri_Tsv, sep = "\t", row.names = FALSE, quote = FALSE)
 
 # Read the file that includes the complete set
 hgnc <- read.csv(paste(inputDir, sourceName, paste0("hgnc_complete_set_", sourceVersion, ".txt"), sep = "/"),
@@ -151,7 +151,7 @@ hgnc[hgnc$primarySymbol == "A2M",]
 
 # Write output TSV files
 output_pri_Tsv <- file.path(outputDir, paste(sourceName, "_priIDs_v", DbVersion, ".tsv", sep = ""))
-write.table(hgnc %>% dplyr::select(primaryID, primarySymbol) %>% unique(), output_pri_Tsv, sep = "\t", row.names = FALSE)
+write.table(hgnc %>% dplyr::select(primaryID, primarySymbol) %>% unique(), output_pri_Tsv, sep = "\t", row.names = FALSE, quote = FALSE)
 
 output_name_Tsv <- file.path(outputDir, paste(sourceName, "_symbol2alia&prev_v", DbVersion, ".tsv", sep = ""))
-write.table(hgnc, output_name_Tsv, sep = "\t", row.names = FALSE)
+write.table(hgnc, output_name_Tsv, sep = "\t", row.names = FALSE, quote = FALSE)
