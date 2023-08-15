@@ -1,0 +1,14 @@
+name: BridgeDb-Shiny
+title: BridgeDb-Shiny
+username:
+account: tabbassidaloii
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8998999
+bundleId: 7203295
+url: https://tabbassidaloii.shinyapps.io/BridgeDb-Shiny/
+when: 1683791521.6428
+lastSyncTime: 1683791521.64281
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: inputPreparation.Rmd
