@@ -91,6 +91,7 @@ add_predicate <- function(dataFile) {
   return(dataFile)
 }
 
+# Define a function to write the sssom file
 write_sssom_tsv <- function(input_data, output_file, source = "") {
   # Define the CURIE map
   curie_map <- list(

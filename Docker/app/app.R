@@ -197,7 +197,7 @@ ui <- fluidPage(
               selectInput(
                 inputId = "sec2pri_download_format",
                 label = "Choose a download format:",
-                choices = c("csv", "tsv", "SSSOM.tsv"),
+                choices = c("csv", "tsv", "sssom.tsv"),
                 selected = "tsv"
               ),
               div(style = "margin-top: -10px"),
@@ -609,7 +609,7 @@ server <- function(input, output, session) {
             sep = ifelse (input$sec2pri_download_format == "csv", ",", "\t"),
             quote = FALSE
           )
-        } else if(input$sec2pri_download_format == "SSSOM.tsv"){
+        } else if(input$sec2pri_download_format == "sssom.tsv"){
           if(input$sec2priDataSource == "HGNC Accession number"){
             if(length(primaryIDs) == 0){
               output <- dataset %>% 
