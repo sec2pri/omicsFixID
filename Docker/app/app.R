@@ -197,7 +197,8 @@ ui <- fluidPage(
               selectInput(
                 inputId = "sec2pri_download_format",
                 label = "Choose a download format:",
-                choices = c("csv", "tsv", "SSSOM.tsv")
+                choices = c("csv", "tsv", "SSSOM.tsv"),
+                selected = "tsv"
               ),
               div(style = "margin-top: -10px"),
               downloadButton(
@@ -279,7 +280,8 @@ ui <- fluidPage(
               selectInput(
                 inputId = "BridgeDb_download_format",
                 label = "Choose a download format:",
-                choices = c("csv", "tsv")
+                choices = c("csv", "tsv"),
+                selected = "tsv"
               ),
               div(style = "margin-top: -10px"),
               downloadButton(
@@ -358,7 +360,7 @@ server <- function(input, output, session) {
         selectInput(
           inputId = 'sec2priDataSource', 
           label = 'Choose the data source:',
-          choices = c("ChEBI name2synonym", "HMDB name2synonym", "Wikidata name2synonym", "HGNC symbol2alias", "Metabolite name2synonym", "Gene symbol2alias"),
+          choices = c("Metabolite name2synonym", "Gene symbol2alias", "ChEBI name2synonym", "HMDB name2synonym", "Wikidata name2synonym", "HGNC symbol2alias"),
           selected = "ChEBI name2synonym" 
         )
       })
@@ -378,7 +380,8 @@ server <- function(input, output, session) {
                                                                    ifelse(input$sec2priDataSource == "HMDB name2synonym","Pi-methylhistidine\nTrimethylenediamine\nalpha-oxo-N-Butyrate",
                                                                           ifelse(input$sec2priDataSource == "ChEBI name2synonym","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\n2-Hydroxybutanoic acid",
                                                                                  ifelse(input$sec2priDataSource == "UniProt","A0A011PKA5\nA0A016SR66\nP9WES5",
-                                                                                        ""))))))))
+                                                                                        ifelse(input$sec2priDataSource == "Metabolite name2synonym","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\nPi-methylhistidine",
+                                                                                               "")))))))))
                         )
     })
   
@@ -427,7 +430,8 @@ server <- function(input, output, session) {
     } else if(input$sec2priDataSource == "HMDB name2synonym"){
       dataset <- data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv")
     } else if(input$sec2priDataSource == "Metabolite name2synonym"){
-      ##:TODO:
+      dataset <- dplyr::bind_rows(HMDB = data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv"),
+                                  ChEBI = data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv"), .id = "sourceFile")
     } else if(input$sec2priDataSource == "Gene name2synonym"){
       ##:TODO:
     } else {
@@ -447,42 +451,22 @@ server <- function(input, output, session) {
     } else if(input$sec2priDataSource == "HMDB name2synonym"){
       priID_list <- unique(data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv", fill = TRUE)[["name"]])
     } else if(input$sec2priDataSource == "Metabolite name2synonym"){
-      ##:TODO:
+      priID_list <- unique(c(data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv", fill = TRUE)[["name"]],
+                             data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv")[["name"]]))
     } else if(input$sec2priDataSource == "Gene name2synonym"){
       ##:TODO:
     } else {
       priID_list <- unlist(data.table::fread(paste0("processed_mapping_files/", input$sec2priDataSource, "_priIDs.tsv"))) 
     }
   })
-  # Function to (1) calculate the number of primary and secondary identifiers in the input table, and (2) to make the output table
+  
+  # Function to calculate the number of primary and secondary identifiers in the input table
   sec2pri_proportion <- reactive({
     req(input$sec2priDataSource) 
     # (1) calculate the number of primary and secondary identifiers in the input table
     if(!is.null(input$sec2pri_identifiers_file) | !is.null(input$sec2pri_identifiers)) {
-      # if(input$sec2priDataSource == "HGNC Accession number"){
-      #   priID_list <- unique(data.table::fread("processed_mapping_files/HGNC_priIDs.tsv")[["primaryID"]])
-      #   dataset <- data.table::fread("processed_mapping_files/HGNC_secID2priID.tsv")
-      # } else if(input$sec2priDataSource == "HGNC symbol2alias"){
-      #   priID_list <- unique(data.table::fread("processed_mapping_files/HGNC_priIDs.tsv")[["primarySymbol"]])
-      #   dataset <- data.table::fread("processed_mapping_files/HGNC_symbol2alia&prev.tsv")
-      # } else if(input$sec2priDataSource == "ChEBI name2synonym"){
-      #   priID_list <- unique(data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv")[["name"]])
-      #   dataset <- data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv")
-      # } else if(input$sec2priDataSource == "HMDB name2synonym"){
-      #   priID_list <- unique(data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv", fill = TRUE)[["name"]])
-      #   dataset <- data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv")
-      # } else if(input$sec2priDataSource == "Metabolite name2synonym"){
-      #   ##:TODO:
-      # } else if(input$sec2priDataSource == "Gene name2synonym"){
-      #   ##:TODO:
-      # } else {
-      #   priID_list =  unlist(data.table::fread(paste0("processed_mapping_files/", input$sec2priDataSource, "_priIDs.tsv"))) 
-      #   dataset = data.table::fread(paste0("processed_mapping_files/", input$sec2priDataSource, "_secID2priID.tsv"))
-      # }
-      
       dataset <- read_data_all()
       priID_list <- read_data_primary()
-
       proportion_table = data.frame(
         type = c("#input IDs", 
                  "#primary IDs",
@@ -504,34 +488,25 @@ server <- function(input, output, session) {
   sec2pri_output <- reactive({
     req(input$sec2priDataSource)
     if(!is.null(input$sec2pri_identifiers_file) | !is.null(input$sec2pri_identifiers)) {
-      # if(input$sec2priDataSource == "HGNC Accession number"){
-      #   dataset <- data.table::fread("processed_mapping_files/HGNC_secID2priID.tsv")
-      # } else if(input$sec2priDataSource == "HGNC symbol2alias"){
-      #   dataset <- data.table::fread("processed_mapping_files/HGNC_symbol2alia&prev.tsv")
-      # } else if(input$sec2priDataSource == "ChEBI name2synonym"){
-      #   dataset <- data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv")
-      # } else if(input$sec2priDataSource == "HMDB name2synonym"){
-      #   dataset <- data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv")
-      # } else {
-      #   dataset = data.table::fread(paste0("processed_mapping_files/", input$sec2priDataSource, "_secID2priID.tsv"))
-      # }
       dataset <- read_data_all()
-      
       if(grepl("HGNC symbol", input$sec2priDataSource)){
         seq2pri_table_output <- dataset %>% 
           filter(secondarySymbol %in% c(secIdentifiersList())) %>%
           select(secondarySymbol, primarySymbol, primaryID, comment) %>%
-          dplyr::rename(`secondary symbol` = secondarySymbol, `primary symbol` = primarySymbol, `primary ID` = primaryID)
+          dplyr::rename(input = secondarySymbol, `primary symbol` = primarySymbol, `primary ID` = primaryID) %>%
+          dplyr::arrange(input, `primary ID`)
       } else if (grepl("name2synonym", input$sec2priDataSource)){
         seq2pri_table_output <- dataset %>% 
           filter(synonym %in% c(secIdentifiersList())) %>%
           select(synonym, name, primaryID) %>%
-          dplyr::rename(`primary ID` = primaryID)
+          dplyr::rename(input = synonym, `primary ID` = primaryID) %>%
+          dplyr::arrange(input, `primary ID`)
       } else {
         seq2pri_table_output <- dataset %>% 
           filter(secondaryID %in% c(secIdentifiersList())) %>%
           select(secondaryID, primaryID) %>%
-          dplyr::rename(`secondary ID` = secondaryID, `primary ID` = primaryID)
+          dplyr::rename(input = secondaryID, `primary ID` = primaryID) %>%
+          dplyr::arrange(input, `primary ID`)
       }
       return(seq2pri_table_output)
     }
@@ -586,100 +561,180 @@ server <- function(input, output, session) {
     })
 
 
-  
   ## Download results
   output$sec2pri_download <- downloadHandler(
     filename = function() {
-      paste0("sec2pri_mapping_IDRefiner.", input$sec2pri_download_format)
+      paste0("IDRefiner_mapping_", gsub(" ", "_", input$sec2priDataSource), ".", input$sec2pri_download_format)
     },
-    # filename = "sec2pri_mapping_IDRefiner.csv",
     content = function(file) {
       if(!is.null(sec2pri_output())) {
-        if(input$sec2priDataSource == "HGNC Accession number"){
-          priID_list <- unique(data.table::fread("processed_mapping_files/HGNC_priIDs.tsv")[["primaryID"]])
-          dataset <- data.table::fread("processed_mapping_files/HGNC_secID2priID.tsv")
-        } else if(input$sec2priDataSource == "HGNC symbol2alias"){
-          priID_list <- unique(data.table::fread("processed_mapping_files/HGNC_priIDs.tsv")[["primarySymbol"]])
-          dataset <- data.table::fread("processed_mapping_files/HGNC_symbol2alia&prev.tsv")
-        } else if(input$sec2priDataSource == "ChEBI name2synonym"){
-          priID_list <- unique(data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv")[["name"]])
-          dataset <- data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv")
-        } else if(input$sec2priDataSource == "HMDB name2synonym"){
-          priID_list <- unique(data.table::fread("processed_mapping_files/HMDB_secID2priID.tsv", fill = TRUE)[["name"]])
-          dataset <- data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv")
-        } else {
-          priID_list =  unlist(data.table::fread(paste0("processed_mapping_files/", input$sec2priDataSource, "_priIDs.tsv"))) 
-          dataset = data.table::fread(paste0("processed_mapping_files/", input$sec2priDataSource, "_secID2priID.tsv"))
-        }
+        dataset <- read_data_all()
+        priID_list <- read_data_primary()
+        
         primaryIDs <- intersect(unique(secIdentifiersList()), priID_list)
         unknownIDs <- unique(secIdentifiersList())[!unique(secIdentifiersList()) %in%
-                                                     c(priID_list, dataset[[grep("secondaryID|secondarySymbol|synonym", colnames(dataset), value = TRUE)]])]
+                                                     c(priID_list, dataset[[grep(ifelse(input$type == "identifierType", "secondaryID", "secondarySymbol|synonym"), colnames(dataset), value = TRUE)]])]
+        
         if(input$sec2pri_download_format %in% c("tsv", "csv")){
-          if(grepl("HGNC", input$sec2priDataSource)){
-            output <- rbind(
+          if(length(primaryIDs) == 0){
+            output <- sec2pri_output()
+          } else if(length(primaryIDs) != 0){
+            if(input$type == "identifierType"){
+              output <- dplyr::bind_rows(
+                sec2pri_output(),
+                data.frame(input = primaryIDs,
+                           `primary ID` = primaryIDs,
+                           comment = "The input is a primary ID.", check.names = FALSE))
+          } else if(input$sec2priDataSource == "HGNC symbol2alias"){
+            output <- dplyr::bind_rows(
               sec2pri_output(),
-              data.frame(inputID = primaryIDs,
-                         `primary ID` = primaryIDs,
-                         comment = rep("", length(primaryIDs)), check.names = FALSE),
-              data.frame(inputID = unknownIDs,
-                         `primary ID` = rep("", length(unknownIDs)),
-                         comment = rep("Unknown", length(unknownIDs)), check.names = FALSE)
-              
+              data.frame(input = primaryIDs, `primary symbol` = primaryIDs, comment = "The input is a primary symbol.", check.names = FALSE) %>%
+                mutate(`primary ID` = dataset$primaryID[match(`primary symbol`, dataset$primarySymbol)])
             )
-          } else {
-            output <- rbind(
+          } else if(grep("name2synonym", input$sec2priDataSource)){
+            output <- dplyr::bind_rows(
               sec2pri_output(),
-              data.frame(inputID = primaryIDs,`primary ID` = primaryIDs, check.names = FALSE),
-              data.frame(inputID = unknownIDs,`primary ID` = rep(NA, length(unknownIDs)), check.names = FALSE)
-            ) %>%
-              mutate(comment = ifelse(inputID %in% unknownIDs, "Unknown", ""))
+              data.frame(input = primaryIDs, name = primaryIDs, comment = "The input is a primary symbol.", check.names = FALSE) %>%
+                mutate(`primary ID` = dataset$primaryID[match(name, dataset$name)])
+            )
+          }
           }
           
+          # Add unknown IDs
+          if(length(unknownIDs) != 0)
+            output <- dplyr::bind_rows(output, data.frame(input  = unknownIDs, comment = "The input is unknown.", check.names = FALSE))
+              
           write.table(
             output, file, row.names = FALSE, 
-            sep = ifelse(input$sec2pri_download_format == "tsv", "\t", ","),
+            sep = ifelse (input$sec2pri_download_format == "csv", ",", "\t"),
             quote = FALSE
           )
         } else if(input$sec2pri_download_format == "SSSOM.tsv"){
-          
-          if(grepl("HGNC", input$sec2priDataSource)){
-            seq2pri_table_output <- dataset %>% 
-              filter(secondarySymbol %in% c(secIdentifiersList())) %>%
-              select(secondarySymbol, primarySymbol, primaryID, comment) %>%
-              dplyr::rename(identifier = secondarySymbol, `primary symbol` = primarySymbol, `primary ID` = primaryID)
-          } else if (grepl("name2synonym", input$sec2priDataSource)){
-            seq2pri_table_output <- dataset %>% 
-              filter(synonym %in% c(secIdentifiersList())) %>%
-              select(synonym, name, primaryID) %>%
-              dplyr::rename(identifier = synonym, `primary ID` = primaryID)
-          } else { #ChEBI, HMDB
-            dataset <- add_mapping_cardinality(dataset) %>%
-              # dplyr::rename(identifier = secondaryID, `primary ID` = primaryID) %>%
-              dplyr::mutate(predicate_id = ifelse(mapping_cardinality %in% c("1:1", "n:1"), "IAO:0100001", "oboInOwl:consider"))
-              
-            output <- rbind(
-              merge(dataset, sec2pri_output(), by.x = c("secondaryID", "primaryID"), by.y = c("identifier", "primary ID")),
-              rbind(
-                data.frame(secondaryID = primaryIDs, primaryID = primaryIDs, predicate_id = rep(NA, length(primaryIDs)), check.names = FALSE),
-                data.frame(secondaryID = unknownIDs, primaryID = rep(NA, length(unknownIDs)), predicate_id = rep(NA, length(unknownIDs)), check.names = FALSE)) %>%
-                dplyr::mutate(comment = ifelse(secondaryID %in% unknownIDs, "Unknown", ""))) %>%
-              dplyr::rename(subject_id = secondaryID, object_id = primaryID) %>%
-              dplyr::select(subject_id, predicate_id, object_id, mapping_cardinality, comment)
+          if(input$sec2priDataSource == "HGNC Accession number"){
+            if(length(primaryIDs) == 0){
+              output <- dataset %>% 
+                dplyr::filter(secondaryID %in% c(secIdentifiersList())) %>% # input is secondary ID 
+                dplyr::select(secondaryID, secondarySymbol, predicateID, primaryID, primarySymbol, mapping_cardinality_sec2pri, comment, source)
+            } else {
+              output <- dplyr::bind_rows(
+                dataset %>% 
+                  dplyr::filter(secondaryID %in% c(secIdentifiersList())) %>% # input is secondary ID 
+                  dplyr::select(secondaryID, secondarySymbol, predicateID, primaryID, primarySymbol, mapping_cardinality_sec2pri, comment, source),
+                dataset %>% 
+                  dplyr::filter(primaryID %in% primaryIDs) %>% # input is primary ID 
+                  dplyr::select(primaryID, primarySymbol, source) %>%
+                  dplyr::mutate(secondaryID = primaryID,
+                                secondarySymbol = primarySymbol,
+                                predicateID = "skos:exactMatch",
+                                mapping_cardinality_sec2pri = NA,
+                                comment = "The input is a primary ID.")
+              )}
+            output <- output %>% dplyr::rename(subject_id = secondaryID , subject_label = secondarySymbol, predicate_id = predicateID,
+                                               object_id = primaryID, object_label = primarySymbol, mapping_cardinality = mapping_cardinality_sec2pri) 
+            
+          } else if(input$sec2priDataSource == "HGNC symbol2alias"){
+            if(length(primaryIDs) == 0){
+              output <- dataset %>% 
+                dplyr::filter(secondarySymbol %in% c(secIdentifiersList())) %>% # input is secondary ID 
+                dplyr::select(secondarySymbol, predicateID, primaryID, primarySymbol, mapping_cardinality_sec2pri, comment, source) %>%
+                dplyr::mutate(secondaryID = NA)
+            } else {
+              output <- dplyr::bind_rows(
+                dataset %>% 
+                  dplyr::filter(secondarySymbol %in% c(secIdentifiersList())) %>% # input is secondary ID 
+                  dplyr::select(secondarySymbol, predicateID, primaryID, primarySymbol, mapping_cardinality_sec2pri, comment, source),
+                dataset %>% 
+                  dplyr::filter(primarySymbol %in% primaryIDs) %>% # input is primary ID 
+                  dplyr::select(primaryID, primarySymbol, source) %>%
+                  dplyr::mutate(secondaryID = primaryID,
+                                secondarySymbol = primarySymbol,
+                                predicateID = "skos:exactMatch",
+                                mapping_cardinality_sec2pri = NA,
+                                comment = "The input is a primary ID.")
+              ) 
+            }
+            output <- output %>% dplyr::rename(subject_id = secondaryID , subject_label = secondarySymbol, predicate_id = predicateID,
+                                               object_id = primaryID, object_label = primarySymbol, mapping_cardinality = mapping_cardinality_sec2pri) 
+          } else if(input$sec2priDataSource == "UniProt"){
+            if(length(primaryIDs) == 0){
+              output <- dataset %>% 
+                dplyr::filter(secondaryID %in% c(secIdentifiersList())) %>% # input is secondary ID 
+                dplyr::select(secondaryID, predicateID, primaryID, mapping_cardinality_sec2pri, comment, source)
+            } else {
+              output <- dplyr::bind_rows(
+                dataset %>% 
+                  dplyr::filter(secondaryID %in% c(secIdentifiersList())) %>% # input is secondary ID 
+                  dplyr::select(secondaryID, predicateID, primaryID, mapping_cardinality_sec2pri, comment, source),
+                dataset %>% 
+                  dplyr::filter(primaryID %in% primaryIDs) %>% # input is primary ID 
+                  dplyr::select(primaryID, source) %>%
+                  dplyr::mutate(secondaryID = primaryID,
+                                predicateID = "skos:exactMatch",
+                                mapping_cardinality_sec2pri = NA,
+                                comment = "The input is a primary ID.")
+              )}
+            output <- output %>% dplyr::rename(subject_id = secondaryID, predicate_id = predicateID, object_id = primaryID, mapping_cardinality = mapping_cardinality_sec2pri) 
+          } else if(input$sec2priDataSource %in% c("ChEBI", "HMDB")){
+            sourceVersion <- read.table("processed_mapping_files/dataSourceVersion.tsv", sep = "\t", header = TRUE)
+            sourceVersion <- sourceVersion$versionInfo[match(input$sec2priDataSource, sourceVersion$datasource)]
+            dataset <- dataset %>% add_mapping_cardinality() %>% add_predicate()
+            if(length(primaryIDs) == 0){
+              output <-  dataset %>% 
+                dplyr::filter(secondaryID %in% c(secIdentifiersList())) # input is secondary ID 
+            } else {
+              output <- dplyr::bind_rows(
+                dataset %>% 
+                  dplyr::filter(secondaryID %in% c(secIdentifiersList())), # input is secondary ID
+                dataset %>% 
+                  dplyr::filter(primaryID %in% primaryIDs) %>% # input is primary ID 
+                  dplyr::select(primaryID) %>%
+                  dplyr::mutate(secondaryID = primaryID,
+                                predicate_id = "skos:exactMatch",
+                                mapping_cardinality = NA,
+                                comment = "The input is a primary ID.")
+              )}
+            output <- output %>% dplyr::rename(subject_id = secondaryID, object_id = primaryID)
+            
+          } else if(grep("name2synonym", input$sec2priDataSource)){
+            sourceVersion <- read.table("processed_mapping_files/dataSourceVersion.tsv", sep = "\t", header = TRUE)
+            if(length(primaryIDs) == 0){
+              output <-  dataset %>% 
+                dplyr::filter(synonym %in% c(secIdentifiersList())) %>% # input is secondary ID 
+                dplyr::mutate(secondaryID = NA,
+                              predicate_id = NA,
+                              mapping_cardinality = NA)
+            } else {
+              output <- dplyr::bind_rows(
+                dataset %>% 
+                  dplyr::filter(synonym %in% c(secIdentifiersList())), # input is secondary ID
+                dataset %>% 
+                  dplyr::filter(name %in% primaryIDs) %>% # input is primary ID 
+                  dplyr::select(primaryID, name, sourceFile) %>%
+                  dplyr::mutate(secondaryID = primaryID,
+                                synonym = name,
+                                predicate_id = NA,
+                                mapping_cardinality = NA,
+                                comment = "The input is a metabolite name.")
+              )}
+            output <- output %>% dplyr::rename(subject_id = secondaryID, subject_label = synonym, object_id = primaryID, object_label = name) %>%
+              dplyr::mutate(source = sourceVersion$versionInfo[match(sourceFile, sourceVersion$datasource)])
           }
           
+          # Add unknown IDs
+          if(length(unknownIDs) != 0){
+            unknownData <- data.frame(subject = unknownIDs, comment = "The input is unknown.", check.names = FALSE)
+            colnames(unknownData)[1] = ifelse(grepl("name2synonym|symbol2alias", input$sec2priDataSource), "subject_label", "subject_id")
+            output <- dplyr::bind_rows(output, unknownData) %>%
+              dplyr::select(dplyr::one_of(c("subject_id", "subject_label", "predicate_id", "object_id", "object_label", "mapping_cardinality", "comment", "source"))) %>%
+              unique()
+          }
           
-          write.table(
-            output, file, row.names = FALSE, 
-            sep = "\t",
-            quote = FALSE
-          )
-          
-          
-        
+          write_sssom_tsv(output, file, source = ifelse(input$sec2priDataSource %in% c("ChEBI", "HMDB"), sourceVersion, ""))
+
       }
       }
-    }
-  )
+    })
+  
   
   observe({
     if(nrow(sec2pri_output()) == 0) {
@@ -895,7 +950,7 @@ server <- function(input, output, session) {
   ## Download results
   output$BridgeDb_download <- downloadHandler(
     filename = function() {
-      paste0("BridgeDb_mapping_IDRefiner.", input$BridgeDb_download_format)
+      paste0("IDMapper.", input$BridgeDb_download_format)
     },
     content = function(file) {
       if(!is.null(BridgeDb_output())) {

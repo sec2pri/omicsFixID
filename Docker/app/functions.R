@@ -1,37 +1,7 @@
-#Reading the required files
+# Read the required files
 dataSources <- data.table::fread("dataSource.csv")
 
-#Define a function for adding mapping cardinality
-add_mapping_cardinality <- function(dataFile) {
-  
-  # Calculate counts
-  dataFile <- dataFile %>%
-    group_by(primaryID) %>% 
-    mutate(count_primaryID = n(),
-           count_primaryID = ifelse(primaryID == "Entry Withdrawn", 0, count_primaryID)) %>%
-    group_by(secondaryID) %>% 
-    mutate(count_secondaryID = n()) %>%
-    ungroup()
-  
-  # Add mapping_cardinality column
-  dataFile <- dataFile %>%
-    mutate(mapping_cardinality = ifelse(count_secondaryID == 1 & count_primaryID == 1,
-                                        "1:1", ifelse(
-                                          count_secondaryID > 1 & count_primaryID == 1,
-                                          "1:n", ifelse(
-                                            count_secondaryID == 1 & count_primaryID > 1,
-                                            "n:1", ifelse(
-                                              count_secondaryID == 1 & count_primaryID == 0,
-                                              "1:0", ifelse(
-                                                count_secondaryID > 1 & count_primaryID > 1,
-                                                "n:n", NA
-                                              ))))))
-  # Return the updated data
-  return(select(dataFile, -c(count_primaryID, count_secondaryID)))
-}
-
-
-# define a function for BridgeDb mapping
+# Define a function for BridgeDb mapping
 Xref_function <- function(identifiers, inputSpecies = "Human",
                           inputSystemCode = "HGNC symbol2alias", outputSystemCode = "All") {
   
@@ -79,6 +49,69 @@ Xref_function <- function(identifiers, inputSpecies = "Human",
     }
   }
   
+}
+
+# Define a function for adding mapping cardinality
+add_mapping_cardinality <- function(dataFile) {
+  # Calculate counts
+  dataFile <- dataFile %>%
+    group_by(primaryID) %>% 
+    mutate(count_primaryID = n(),
+           count_primaryID = ifelse(primaryID == "Entry Withdrawn", 0, count_primaryID)) %>%
+    group_by(secondaryID) %>% 
+    mutate(count_secondaryID = n()) %>%
+    ungroup()
+  # Add mapping_cardinality column
+  dataFile <- dataFile %>%
+    mutate(mapping_cardinality = ifelse(count_secondaryID == 1 & count_primaryID == 1,
+                                        "1:1", ifelse(
+                                          count_secondaryID > 1 & count_primaryID == 1,
+                                          "1:n", ifelse(
+                                            count_secondaryID == 1 & count_primaryID > 1,
+                                            "n:1", ifelse(
+                                              count_secondaryID == 1 & count_primaryID == 0,
+                                              "1:0", ifelse(
+                                                count_secondaryID > 1 & count_primaryID > 1,
+                                                "n:n", NA
+                                              ))))))
+  # Return the updated data
+  return(select(dataFile, -c(count_primaryID, count_secondaryID)))
+}
+
+# Define a function for adding mapping cardinality
+add_predicate <- function(dataFile) {
+  # Add mapping_cardinality column
+  dataFile <- dataFile %>%
+    mutate(predicate_id = ifelse(mapping_cardinality %in% c("1:n", "n:n"), #the secondary ID that Split into multiple OR multiple secondary IDs merged/splited into multiple primary IDs
+                                 "oboInOwl:consider", ifelse(
+                                   mapping_cardinality %in% c("1:1", "n:1"), #the secondary ID replace by new ID OR multiple secondary IDs merged into one primary ID
+                                   "IAO:0100001", NA
+                                 )))
+  # Return the updated data
+  return(dataFile)
+}
+
+write_sssom_tsv <- function(input_data, output_file, source = "") {
+  # Define the CURIE map
+  curie_map <- list(
+    "CHEBI:" = "http://purl.obolibrary.org/obo/CHEBI_",
+    "UniProt:" = "http://identifiers.org/uniprot/",
+    "HGNC:" = "http://identifiers.org/hgnc/",
+    "skos:" = "http://www.w3.org/2004/02/skos/core#",
+    "owl:" = "http://www.w3.org/2002/07/owl#"
+  )
+  
+  
+  # Write the CURIE map as comments in the output file
+  curie_comments <- paste0("# curie_map:\n")
+  for (curie in names(curie_map)) {
+    curie_comments <- paste0(curie_comments, "#   ", curie, " ", curie_map[[curie]], "\n")
+  }
+  if(source != "") curie_comments <- paste0(curie_comments, "#datasource version: ", source, "\n")
+  
+  # Write the SSSOM data frame and CURIE map comments to the output file
+  writeLines(curie_comments, con = output_file, sep = "")
+  write.table(input_data, file = output_file, sep = "\t", quote = FALSE, row.names = FALSE, append = TRUE)
 }
 
 # Plot theme

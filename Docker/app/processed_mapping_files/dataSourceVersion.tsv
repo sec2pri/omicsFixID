@@ -1,0 +1,4 @@
+datasource	versionInfo
+Wikidata	NA
+HMDB	version 5.0, released on 2021-11-17, downloaded from http://www.hmdb.ca/system/downloads/current/hmdb_metabolites.zip All Metabolites file (in XML format).
+ChEBI	version 223, released on 2023-07-01, downloaded from https://ftp.ebi.ac.uk/pub/databases/chebi/archive/rel223/SDF/ChEBI_complete_3star.sdf.gz
