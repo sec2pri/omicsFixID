@@ -3,7 +3,7 @@ dataSources <- data.table::fread("dataSource.csv")
 
 # Define a function for BridgeDb mapping
 Xref_function <- function(identifiers, inputSpecies = "Human",
-                          inputSystemCode = "HGNC symbol2alias", outputSystemCode = "All") {
+                          inputSystemCode = "HGNC", outputSystemCode = "All") {
   
   # Preparing the query
   input_source <- dataSources$systemCode[dataSources$source == inputSystemCode]

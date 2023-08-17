@@ -161,7 +161,7 @@ ui <- fluidPage(
             # Render the input options for selecting a identifier type
             radioButtons ("type", "Mapping type:", inline = TRUE,
                           c ("Identifier" = "identifierType", "Symbol/Name" = "symbolType"),
-                          selected = "Identifier" 
+                          selected = "identifierType" 
             ),
             div(style = "margin-top: -10px"),
             # Render the input options for selecting a data source
@@ -234,13 +234,13 @@ ui <- fluidPage(
             div(style = "margin-top: -10px"),
             
             # Render the input options for selecting a identifier type
-            radioButtons ("type", "Choose identifier type:", inline = TRUE,
+            radioButtons ("type_BridgeDb", "Choose identifier type:", inline = TRUE,
                           c ("Gene/Protein" = "gene", "Metabolites" = "metabolite"),
                           selected = "metabolite" 
             ),
             # Render the input options for selecting a species
             conditionalPanel(
-              condition = "input.type == 'gene'",
+              condition = "input.type_BridgeDb == 'gene'",
               uiOutput('inputSpecies')
             ),
             div(style = "margin-top: -5px"),
@@ -347,6 +347,7 @@ server <- function(input, output, session) {
   #sec2pri tab
   #Define the input options based on identifier or symbol/name
   observe({
+    print(input$type)
     if(input$type == "identifierType") { 
       output$dataSource <- renderUI({
         selectInput(
@@ -799,7 +800,7 @@ server <- function(input, output, session) {
   ##Define the input options based
   ### Species
   observe({
-    if(input$type == "gene") {
+    if(input$type_BridgeDb == "gene") {
       output$inputSpecies <- renderUI({
         # Render the input options for selecting a species
         selectInput(
@@ -809,7 +810,7 @@ server <- function(input, output, session) {
           selected = "Human"
         )
       })
-    } else if(input$type == "metabolite") {
+    } else if(input$type_BridgeDb == "metabolite") {
       output$inputSpecies <- renderUI({
         # Render an empty UI if identifier type is not gene
         NULL
@@ -818,7 +819,7 @@ server <- function(input, output, session) {
   })
   ### Input data source
   observe({
-    if(input$type == "gene") {
+    if(input$type_BridgeDb == "gene") {
       output$inputDataSource <- renderUI({
         # Render the input options for selecting a species
         selectInput(
@@ -828,7 +829,7 @@ server <- function(input, output, session) {
           selected = "HGNC symbol2alias"
         )
       })
-    } else if(input$type == "metabolite") {
+    } else if(input$type_BridgeDb == "metabolite") {
       output$inputDataSource <- renderUI({
         # Render the input options for selecting a species
         selectInput(
@@ -842,7 +843,7 @@ server <- function(input, output, session) {
   })
   ### Output data source
   observe({
-    if(input$type == "gene") {
+    if(input$type_BridgeDb == "gene") {
       output$outputDataSource <- renderUI({
         # Render the input options for selecting a species
         selectInput(
@@ -852,7 +853,7 @@ server <- function(input, output, session) {
           selected = "Ensembl"
         )
       })
-    } else if(input$type == "metabolite") {
+    } else if(input$type_BridgeDb == "metabolite") {
       output$outputDataSource <- renderUI({
         # Render the input options for selecting a species
         selectInput(
@@ -900,7 +901,7 @@ server <- function(input, output, session) {
   # Function to make the output table
   BridgeDb_output <- reactive({
     req(!is.null(identifiersList())) 
-    if(input$type == "gene") {
+    if(input$type_BridgeDb == "gene") {
       input_species <- input$inputSpecies
       input_data_source <- input$inputDataSource
       output_data_source <- input$outputDataSource
@@ -911,7 +912,7 @@ server <- function(input, output, session) {
         outputSystemCode = output_data_source)
       return(BridgeDb_results)
       # return(NULL)
-    } else if(input$type == "metabolite") {
+    } else if(input$type_BridgeDb == "metabolite") {
       input_data_source <- input$inputDataSource
       output_data_source <- input$outputDataSource
       BridgeDb_results <- Xref_function(
