@@ -108,8 +108,12 @@ write_sssom_tsv <- function(input_data, output_file, source = "") {
   for (curie in names(curie_map)) {
     curie_comments <- paste0(curie_comments, "#   ", curie, " ", curie_map[[curie]], "\n")
   }
-  if(source != "") curie_comments <- paste0(curie_comments, "#datasource version: ", source, "\n")
-  
+  if(source != "") curie_comments <- paste0(curie_comments, "# source: ", source, "\n")
+  if(any(colnames(input_data) == "source") && length(unique(input_data$source[!is.na(input_data$source)])) == 1){
+    source = unique(input_data$source[input_data$source != "NA"][!is.na(input_data$source)])
+    curie_comments <- paste0(curie_comments, "# source: ", source, "\n")
+    input_data$source = NULL
+  }
   # Write the SSSOM data frame and CURIE map comments to the output file
   writeLines(curie_comments, con = output_file, sep = "")
   write.table(input_data, file = output_file, sep = "\t", quote = FALSE, row.names = FALSE, append = TRUE)
