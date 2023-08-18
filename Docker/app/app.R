@@ -807,6 +807,13 @@ server <- function(input, output, session) {
   # }, deleteFile = F)
   
   #BridgeDb tab
+  # Handle clearing of BridgeDb_identifiers
+  observeEvent(c(input$type_BridgeDb, input$inputDataSource), {
+    updateTextAreaInput(session,
+                        inputId = 'BridgeDb_identifiers',
+                        value = '')  # Clear the text area
+  })
+  
   ##Define the input options based
   ### Species
   observe({
@@ -831,6 +838,8 @@ server <- function(input, output, session) {
   observe({
     if(input$type_BridgeDb == "gene") {
       output$inputDataSource <- renderUI({
+        BridgeDb_mapping$BridgeDb_table <- NULL
+        
         # Render the input options for selecting a species
         selectInput(
           inputId = 'inputDataSource', 
@@ -841,6 +850,8 @@ server <- function(input, output, session) {
       })
     } else if(input$type_BridgeDb == "metabolite") {
       output$inputDataSource <- renderUI({
+        BridgeDb_mapping$BridgeDb_table <- NULL
+        
         # Render the input options for selecting a species
         selectInput(
           inputId = 'inputDataSource', 
@@ -854,6 +865,8 @@ server <- function(input, output, session) {
   ### Output data source
   observe({
     if(input$type_BridgeDb == "gene") {
+      BridgeDb_mapping$BridgeDb_table <- NULL
+      
       output$outputDataSource <- renderUI({
         # Render the input options for selecting a species
         selectInput(
@@ -865,6 +878,8 @@ server <- function(input, output, session) {
       })
     } else if(input$type_BridgeDb == "metabolite") {
       output$outputDataSource <- renderUI({
+        BridgeDb_mapping$BridgeDb_table <- NULL
+        
         # Render the input options for selecting a species
         selectInput(
           inputId = 'outputDataSource', 
@@ -910,7 +925,9 @@ server <- function(input, output, session) {
   
   # Function to make the output table
   BridgeDb_output <- reactive({
-    req(!is.null(identifiersList())) 
+    req(!is.null(identifiersList()))
+    BridgeDb_mapping$BridgeDb_table <- NULL
+    
     if(input$type_BridgeDb == "gene") {
       input_species <- input$inputSpecies
       input_data_source <- input$inputDataSource
@@ -945,6 +962,8 @@ server <- function(input, output, session) {
   
   BridgeDb_mapping <- reactiveValues(BridgeDb_table = NULL)
   observeEvent(input$BridgeDb_get, {
+    BridgeDb_mapping$BridgeDb_table <- NULL
+    
     if(!is.null(BridgeDb_output())) {
       BridgeDb_mapping$BridgeDb_table <- req(
         DT::datatable(BridgeDb_output(),
