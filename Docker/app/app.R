@@ -186,7 +186,7 @@ ui <- fluidPage(
             div(style = "margin-top: -10px"),
             div(
               actionButton(
-                "sec2pri_get", "mapping",
+                "sec2pri_get", "Refine IDs",
                 style = "color: white; background-color: gray; border-color: black"),
               actionButton(
                 "sec2pri_clear_list", "Clear",
@@ -270,7 +270,7 @@ ui <- fluidPage(
             div(style = "margin-top: -10px"),
             div(
               actionButton(
-                "BridgeDb_get", "mapping",
+                "BridgeDb_get", "Bridge IDs",
                 style = "color: white; background-color: gray; border-color: black"),
               actionButton(
                 "BridgeDb_clear_list", "Clear",
@@ -373,6 +373,10 @@ server <- function(input, output, session) {
   
   # Update the TextArea based on the selected database
   observeEvent(input$sec2priDataSource, {
+    # Clear the existing outputs
+    seq2pri_mapping$seq2pri_pieChart <- NULL
+    seq2pri_mapping$seq2pri_table <- NULL
+    output$sec2pri_metadata <- NULL
     updateTextAreaInput(session, "sec2pri_identifiers",
                         value = ifelse(input$sec2priDataSource == "HGNC symbol2alias", "HOXA11\nHOX12\nCD31", 
                                        ifelse(input$sec2priDataSource == "HGNC Accession number","HGNC:24\nHGNC:32\nHGNC:13349\nHGNC:7287\n",
@@ -527,19 +531,25 @@ server <- function(input, output, session) {
   seq2pri_mapping <- reactiveValues(seq2pri_pieChart = NULL, metadata = NULL, seq2pri_table = NULL)
   
   observeEvent(input$sec2pri_get, {
-    seq2pri_mapping$seq2pri_pieChart <- 
-      # Function to draw the piechart
-      ggplot(sec2pri_proportion() [c(-1), ],
-             aes(x = type, y = no, fill = type)) +
+    # Clear the existing outputs
+    seq2pri_mapping$seq2pri_pieChart <- NULL
+    seq2pri_mapping$seq2pri_table <- NULL
+    
+    if (!is.null(sec2pri_proportion())) {
+      seq2pri_mapping$seq2pri_pieChart <- 
+        # Function to draw the piechart
+        ggplot(sec2pri_proportion() [c(-1), ],
+               aes(x = type, y = no, fill = type)) +
         geom_col(position = position_dodge(0.9), width = 0.9) +
         scale_fill_brewer(palette = "Blues") +
         coord_flip() +
         plot_theme + 
         ggtitle(ifelse(is.na(sec2pri_proportion()$no[1]), "No input provided",
-                             paste0(sec2pri_proportion()$no[1], ifelse(input$type == "identifierType", " (unique) input identifiers", " (unique) input symbols/names")))) +
+                       paste0(sec2pri_proportion()$no[1], ifelse(input$type == "identifierType", " (unique) input identifiers", " (unique) input symbols/names")))) +
         geom_text(aes(y = no, label = no), size = 6,
                   position = position_stack(vjust = .5)) +
         theme(plot.margin = unit(c(1, 1, -0.5, 1), "cm"))
+    }
 
     if(nrow(sec2pri_output()) != 0) {
       seq2pri_mapping$seq2pri_table <- req(
