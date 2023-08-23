@@ -8,3 +8,8 @@
 Docker/app/renv.lock
 Docker/app/rsconnect/shinyapps.io/tabbassidaloii/BridgeDb-Shiny.dcf
 Docker/app/sec2pri_module.R
+Docker/app/renv/activate.R
+Docker/app/renv/activate.R
+Docker/app/.Rprofile
+Docker/app/renv/activate.R
+.gitignore

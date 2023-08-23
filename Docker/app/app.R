@@ -10,8 +10,8 @@ library(shiny)
 library(DT)
 library(data.table)
 library(rjson)
-library(shinyBS)
-library(shinyjs)
+# library(shinyBS)
+# library(shinyjs)
 
 
 # Load required functions and data
@@ -48,6 +48,20 @@ ui <- fluidPage(
              .input-group {
                margin-bottom: 0px;
              }
+             .navbar-default {
+               background-color: #004578; 
+             }
+             
+             .navbar-default .navbar-nav > .active > a,
+             .navbar-default .navbar-nav > .active > a:focus,
+             .navbar-default .navbar-nav > .active > a:hover {
+               background-color: #eff6fc;
+               color: #004578; 
+               font-weight: bold;
+             }
+             .well {
+               background-color: #deecf9;
+             }
          </style>
       ')
     )
@@ -59,7 +73,7 @@ ui <- fluidPage(
         div(
           h5(""),
           strong("Omics IDRefiner"),
-          style = "float:left;justify-content: flex-end;"
+          style = "float:left;justify-content: flex-end;color: #004578; background-color: white;"
         ),
         div(
           imageOutput("Maastricht_logo"),
@@ -83,7 +97,7 @@ ui <- fluidPage(
       icon = icon("book"),
       align = "justify",
       # Add a summary section
-      h3(strong("Summary")),
+      h3(strong("Summary"), style = "color: #004578;"),
       # onclick = "ga('send', 'event', 'click', 'link')",
       p("Biological entities such as genes, proteins, complexes, and metabolites often have diverse identifiers across various databases, which pose a challenge for data integration. To solve this problem, identifier mapping is required to convert identifiers from one database to corresponding entities from other databases."),
       # imageOutput("bridgeDb_logo", height = "70px"),
@@ -97,7 +111,7 @@ ui <- fluidPage(
       #   )
       # ),
       br(),
-      h4(strong("The secondary identifier challenge")),
+      h4(strong("The secondary identifier challenge"), style = "color: #004578;"),
       p("After mapping identifiers from one database to another, integrating data can remain a challenge due to the presence of", 
         HTML("<b>retired, deleted, split, and/or merged identifiers</b>"), 
         " currently present in databases and datasets alike. These outdated identifiers are called",
@@ -111,11 +125,11 @@ ui <- fluidPage(
         ),
         "These tools currently do not have an API or other form of programmatic access, leading to issues in big omics data analysis."),
       br(),
-      h4(strong("Omics IDRefiner")),
+      h4(strong("Omics IDRefiner"), style = "color: #004578;"),
       p("To address the challenges of integrating data from different biological sources that contain secondary identifiers, we developed a user-friendly Shiny app called Omics IDRefiner, which provides two key functions:",
         tags$ul(
           tags$li(style = "list-style-type: decimal;",
-                  HTML("<b><span style='font-size:15px;'>IDRefiner:</span></b>"),
+                  HTML("<b><span style='font-size:15px;color: #004578;'>IDRefiner:</span></b>"),
                   br(),
                   "provides statistics on the percentage of secondary identifiers in the dataset and converts outdated secondary identifiers to current primary identifiers, if available.",
                   "The IDRefiner functionality currently covers secondary identifiers from",
@@ -132,7 +146,7 @@ ui <- fluidPage(
                   )
           ),
           tags$li(style = "list-style-type: decimal;",
-                  HTML("<b><span style='font-size:15px;'>IDMapper:</span></b>"),
+                  HTML("<b><span style='font-size:15px;color: #004578;'>IDMapper:</span></b>"),
                   br(),
                   "uses BridgeDb's REST-API to convert identifiers.")
           
@@ -189,10 +203,10 @@ ui <- fluidPage(
             div(
               actionButton(
                 "sec2pri_get", "Refine IDs",
-                style = "color: white; background-color: gray; border-color: black"),
+                style = "color: white; background-color: #004578; border-color: #004578"),
               actionButton(
                 "sec2pri_clear_list", "Clear",
-                style = "color: white; background-color: gray; border-color: black"),
+                style = "color: white; background-color: #004578; border-color: #004578"),
               br(),
               br(),
               div(style = "margin-top: -10px"),
@@ -202,7 +216,7 @@ ui <- fluidPage(
               downloadButton(
                 outputId = "sec2pri_download",
                 label = "Download results", 
-                style = "color: white; background-color: gray; border-color: black"
+                style = "color: white; background-color: #004578; border-color: #004578"
               ),
               div(style = "margin-top: -10px")
             ),
@@ -268,10 +282,10 @@ ui <- fluidPage(
             div(
               actionButton(
                 "BridgeDb_get", "Bridge IDs",
-                style = "color: white; background-color: gray; border-color: black"),
+                style = "color: white; background-color: #004578; border-color: #004578"),
               actionButton(
                 "BridgeDb_clear_list", "Clear",
-                style = "color: white; background-color: gray; border-color: black"),
+                style = "color: white; background-color: #004578; border-color: #004578"),
               br(),
               br(),
               div(style = "margin-top: -10px"),
@@ -285,7 +299,7 @@ ui <- fluidPage(
               downloadButton(
                 outputId = "BridgeDb_download", 
                 label = "Download results", 
-                style = "color: white; background-color: gray; border-color: black"
+                style = "color: white; background-color: #004578; border-color: #004578"
               ),
               div(style = "margin-top: -10px")
             ),
@@ -308,7 +322,7 @@ ui <- fluidPage(
         style = "margin-top: 15px;",
         # Add a contact us section
         br(),
-        p(HTML("<b><span style='font-size:16px;'>For questions and comments:</span></b>")),
+        p(HTML("<b><span style='font-size:16px;color: #004578;'>For questions and comments:</span></b>")),
         p(HTML("<b>Tooba Abbassi-Daloii</b>"), ": t.abbassidaloii@maastrichtuniversity.nl"),
         br(),
         p("Department Bioinformatics - BiGCaT"),
@@ -514,7 +528,7 @@ server <- function(input, output, session) {
                                             colnames(dataset), value = TRUE)]]))
       noUnknown <- length(setdiff(setdiff(unique(secIdentifiersList()), pri), sec))
       proportion_table = data.frame(
-        type = c("#input IDs", "#primary IDs", "#secondary IDs", "#unknown"),
+        type = c("#input IDs", "#primary", "#secondary", "#unknown"),
         no = c(noInput, length(pri), length(sec), noUnknown)
       )# %>% mutate(prop = no/length(unique(secIdentifiersList())))
       return(proportion_table[proportion_table$no != 0, ])
@@ -577,7 +591,7 @@ server <- function(input, output, session) {
     )
   })  
   
-  seq2pri_mapping <- reactiveValues(seq2pri_pieChart = NULL, metadata = NULL, seq2pri_table = NULL)
+  seq2pri_mapping <- reactiveValues(seq2pri_pieChart = NULL, seq2pri_table = NULL)
   
   observeEvent(input$sec2pri_get, {
     # Clear the existing outputs
@@ -605,7 +619,9 @@ server <- function(input, output, session) {
         DT::datatable(sec2pri_output(),
                       options = list(orderClasses = TRUE,
                                      lengthMenu = c(10, 25, 50, 100),
-                                     pageLength = 10)
+                                     pageLength = 10),
+                      caption = htmltools::tags$caption(style = 'caption-side: top; text-align: left; color:black; font-weight: bold;',
+                                              "Only the mapping results for the secondary inputs are shown:"),
         )
       )
     } 
@@ -859,7 +875,7 @@ server <- function(input, output, session) {
     js_reset_file_input <- "$('#sec2pri_identifiers_file').val(null); $('.custom-file-label').html('Please upload file..');"
     session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
     seq2pri_mapping$seq2pri_pieChart <- NULL
-    seq2pri_mapping$metadata <- NULL
+    output$sec2pri_metadata <- NULL 
     seq2pri_mapping$seq2pri_table <- NULL
   })
   
