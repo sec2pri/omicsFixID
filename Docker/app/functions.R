@@ -84,7 +84,7 @@ add_predicate <- function(dataFile) {
   dataFile <- dataFile %>%
     mutate(predicate_id = ifelse(mapping_cardinality %in% c("1:n", "n:n"), #the secondary ID that Split into multiple OR multiple secondary IDs merged/splited into multiple primary IDs
                                  "oboInOwl:consider", ifelse(
-                                   mapping_cardinality %in% c("1:1", "n:1"), #the secondary ID replace by new ID OR multiple secondary IDs merged into one primary ID
+                                   mapping_cardinality %in% c("1:1", "n:1", "1:0"), #the secondary ID replace by new ID OR multiple secondary IDs merged into one primary ID
                                    "IAO:0100001", NA
                                  )))
   # Return the updated data
@@ -96,8 +96,11 @@ write_sssom_tsv <- function(input_data, output_file, source = "") {
   # Define the CURIE map
   curie_map <- list(
     "CHEBI:" = "http://purl.obolibrary.org/obo/CHEBI_",
+    "HMDB:" = "http://www.hmdb.ca/metabolites/",
+    "Wikidata:" = "http://www.wikidata.org/entity/",
     "UniProt:" = "http://identifiers.org/uniprot/",
     "HGNC:" = "http://identifiers.org/hgnc/",
+    "NCBI:" = "",
     "skos:" = "http://www.w3.org/2004/02/skos/core#",
     "owl:" = "http://www.w3.org/2002/07/owl#"
   )

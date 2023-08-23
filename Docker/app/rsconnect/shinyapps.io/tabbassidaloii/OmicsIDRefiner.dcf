@@ -1,0 +1,14 @@
+name: OmicsIDRefiner
+title: OmicsIDRefiner
+username:
+account: tabbassidaloii
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 9644155
+bundleId: 7593524
+url: https://tabbassidaloii.shinyapps.io/OmicsIDRefiner/
+when: 1692630821.93498
+lastSyncTime: 1692630821.93499
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: dataSources.tsv
