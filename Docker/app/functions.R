@@ -1,6 +1,9 @@
 # Read the required files
 dataSources <- data.table::fread("dataSource.csv")
 
+# Load tooltip data from file
+tooltips <- read.csv("tooltips.txt", sep = "\t")
+
 # Define a function for BridgeDb mapping
 Xref_function <- function(identifiers, inputSpecies = "Human",
                           inputSystemCode = "HGNC", outputSystemCode = "All") {

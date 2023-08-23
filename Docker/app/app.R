@@ -62,6 +62,14 @@ ui <- fluidPage(
              .well {
                background-color: #deecf9;
              }
+             .info-icon {
+               color: black; /* Custom icon color */
+               background-color: transparent; /* No background */
+             }
+             .info-icon:hover {
+               color: gray; /* Hover color */
+             }
+               
          </style>
       ')
     )
@@ -173,9 +181,12 @@ ui <- fluidPage(
         sidebarLayout(
           # Add a sidebar panel with input controls
           sidebarPanel(
+            style = "width: 255px;",
             div(style = "margin-top: -10px"),
             # Render the input options for selecting a identifier type
-            radioButtons ("type", "Mapping type:", inline = TRUE,
+            radioButtons ("type", 
+                          HTML(paste("Mapping type&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='", tooltips$description[tooltips$tooltip == "Mapping type"], "'></i> :")),
+                         inline = TRUE, 
                           c ("Identifier" = "identifierType", "Symbol/Name" = "symbolType"),
                           selected = "identifierType" 
             ),
@@ -185,15 +196,15 @@ ui <- fluidPage(
             # Add a file input for uploading a text file containing identifiers
             fileInput(
               "sec2pri_identifiers_file",
-              "Upload identifiers File",
+              HTML(paste("Upload identifiers file&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='", tooltips$description[tooltips$tooltip == "Identifier file"], "'></i> :")),
               accept = c(".csv", ".xlsx", ".xls", ".tsv", ".txt"),
               placeholder = "Please upload file.."
             ),
             div(style = "margin-top: -30px"),
             # Add a text area input for entering identifiers
             textAreaInput(
-              'sec2pri_identifiers', 
-              'or insert identifier(s) here', 
+              'sec2pri_identifiers',
+              HTML(paste("or insert identifier(s) here&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='", tooltips$description[tooltips$tooltip == "Identifiers"], "'></i> :")),
               value = "", 
               width = NULL, 
               placeholder = 'one identifier per row'
@@ -219,15 +230,14 @@ ui <- fluidPage(
                 style = "color: white; background-color: #004578; border-color: #004578"
               ),
               div(style = "margin-top: -10px")
-            ),
-            width = 3
+            )
           ),
           # Add a main panel for displaying the bridge list
           mainPanel(
+            style = "margin-left: 0px; padding: 20px;",
             div(htmlOutput("sec2pri_metadata")),
-            div(plotOutput("sec2pri_piechart_results", height = "300px"), class = "my-plot"),
-            div(DTOutput("sec2pri_mapping_results"), style = "margin-top: -100px;"),
-            width = 9
+            div(plotOutput("sec2pri_piechart_results", height = "200px"), class = "my-plot"),
+            div(DTOutput("sec2pri_mapping_results"), style = "margin-top: -100px;")
           )
         )
       )
@@ -242,6 +252,7 @@ ui <- fluidPage(
         sidebarLayout(
           # Add a sidebar panel with input controls
           sidebarPanel(
+            style = "width: 250px;",
             div(style = "margin-top: -10px"),
             
             # Render the input options for selecting a identifier type
@@ -302,13 +313,12 @@ ui <- fluidPage(
                 style = "color: white; background-color: #004578; border-color: #004578"
               ),
               div(style = "margin-top: -10px")
-            ),
-            width = 3
+            )
           ),
           # Add a main panel for displaying the bridge list
           mainPanel(
-            div(DTOutput("BridgeDb_mapping_results", height = "500px")),
-            width = 9
+            style = "margin-left: 0px; padding: 20px;",
+            div(DTOutput("BridgeDb_mapping_results", height = "500px"))
           )
         )
       ),
@@ -362,7 +372,8 @@ server <- function(input, output, session) {
       output$dataSource <- renderUI({
         selectInput(
           inputId = 'sec2priDataSource', 
-          label = 'Choose the data source:',
+          label = HTML(paste("Choose the data source&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='", tooltips$description[tooltips$tooltip == "Data source"], "'></i> :")),
+          # label = 'Choose the data source:',
           choices = c("ChEBI", "HMDB", "Wikidata metabolites", "Wikidata genes/proteins", "HGNC Accession number", "NCBI", "UniProt"),
           selected = "ChEBI" 
           )
@@ -371,7 +382,7 @@ server <- function(input, output, session) {
       output$dataSource <- renderUI({
         selectInput(
           inputId = 'sec2priDataSource', 
-          label = 'Choose the data source:',
+          label = HTML(paste("Choose the data source&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='", tooltips$description[tooltips$tooltip == "Data source"], "'></i> :")),
           choices = c("Metabolite name2synonym", "ChEBI name2synonym", "HMDB name2synonym", "Wikidata name2synonym",
                       "Gene symbol2alias", "HGNC symbol2alias", "NCBI symbol2alias"),
           selected = "ChEBI name2synonym" 
@@ -585,7 +596,7 @@ server <- function(input, output, session) {
     
     selectInput(
       inputId = "sec2pri_download_format",
-      label = "Choose a download format:",
+      label = HTML(paste("Choose a download format:&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='", tooltips$description[tooltips$tooltip == "Format"], "'></i> :")),
       choices = downloadFormats,
       selected = "tsv"
     )
