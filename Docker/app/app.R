@@ -366,7 +366,7 @@ server <- function(input, output, session) {
   }, deleteFile = FALSE)
   
   #sec2pri tab
-  #Define the input options based on identifier or symbol/name
+  # Define the input options based on identifier or symbol/name
   observe({
     if(input$type == "identifierType") { 
       output$dataSource <- renderUI({
@@ -391,47 +391,45 @@ server <- function(input, output, session) {
     }
   })
 
-
-  
   # Update the TextArea based on the selected database
   observeEvent(input$sec2priDataSource, {
     # Clear the existing outputs
-    seq2pri_mapping$seq2pri_pieChart <- NULL
-    seq2pri_mapping$seq2pri_table <- NULL
+    sec2pri_mapping$sec2pri_pieChart <- NULL
+    sec2pri_mapping$sec2pri_table <- NULL
     output$sec2pri_metadata <- NULL
     updateTextAreaInput(session, "sec2pri_identifiers",
                         value = ifelse(input$sec2priDataSource == "HGNC symbol2alias", "HOXA11\nHOX12\nCD31", 
                                        ifelse(input$sec2priDataSource == "HGNC Accession number","HGNC:24\nHGNC:32\nHGNC:13349\nHGNC:7287\n",
                                               ifelse(input$sec2priDataSource == "HMDB","HMDB0000005\nHMDB0004990\nHMDB60172\nHMDB00016",
                                                      ifelse(input$sec2priDataSource == "HMDB name2synonym","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\nPi-methylhistidine\nCS2\nrenzapride",
-                                                            
-                                                     ifelse(input$sec2priDataSource == "ChEBI", "CHEBI:20245\nCHEBI:136845\nCHEBI:656608\nCHEBI:4932",
-                                                            ifelse(input$sec2priDataSource == "Wikidata metabolites","Q422964\nQ25500867\nQ16634192",
-                                                                   ifelse(input$sec2priDataSource == "Wikidata genes/proteins","Q21118320\nQ21119955\nQ21122914",
-                                                                          ifelse(input$sec2priDataSource == "Wikidata name2synonym","antifade\nCS2\n",
-                                                                                 ifelse(input$sec2priDataSource == "ChEBI name2synonym","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\n2-Hydroxybutanoic acid",
-                                                                                        ifelse(input$sec2priDataSource == "UniProt","A0A011PKA5\nA0A016SR66\nP9WES5",
-                                                                                               ifelse(input$sec2priDataSource == "Metabolite name2synonym","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\nPi-methylhistidine\nCS2\nrenzapride",
-                                                                                                      ifelse(input$sec2priDataSource == "NCBI","61\n76\n79839\n99",
-                                                                                                             ifelse(input$sec2priDataSource == "NCBI symbol2alias","S863-7\nNAT1\nEIEE29",
-                                                                                                                    ifelse(input$sec2priDataSource == "Gene symbol2alias","S863-7\nNAT1\nEIEE29\nHOXA11\nHOX12\nCD31",
-                                                                                                                           ""))))))))))))))
+                                                            ifelse(input$sec2priDataSource == "ChEBI", "CHEBI:20245\nCHEBI:136845\nCHEBI:656608\nCHEBI:4932",
+                                                                   ifelse(input$sec2priDataSource == "Wikidata metabolites","Q422964\nQ25500867\nQ16634192",
+                                                                          ifelse(input$sec2priDataSource == "Wikidata genes/proteins","Q21118320\nQ21119955\nQ21122914",
+                                                                                 ifelse(input$sec2priDataSource == "Wikidata name2synonym","antifade\nCS2\n",
+                                                                                        ifelse(input$sec2priDataSource == "ChEBI name2synonym","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\n2-Hydroxybutanoic acid",
+                                                                                               ifelse(input$sec2priDataSource == "UniProt","A0A011PKA5\nA0A016SR66\nP9WES5",
+                                                                                                      ifelse(input$sec2priDataSource == "Metabolite name2synonym","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\nPi-methylhistidine\nCS2\nrenzapride",
+                                                                                                             ifelse(input$sec2priDataSource == "NCBI","61\n76\n79839\n99",
+                                                                                                                    ifelse(input$sec2priDataSource == "NCBI symbol2alias","S863-7\nNAT1\nEIEE29",
+                                                                                                                           ifelse(input$sec2priDataSource == "Gene symbol2alias","S863-7\nNAT1\nEIEE29\nHOXA11\nHOX12\nCD31",
+                                                                                                                                  ""))))))))))))))
     )
     })
   
-  #Check the input
-  seq2pri_input_file <- reactiveVal(NULL)
+  # Function to check the input file
+  sec2pri_input_file <- reactiveVal(NULL)
   observeEvent(input$sec2pri_identifiers_file, {
     if(!is.null(input$sec2pri_identifiers_file)){
-      seq2pri_input_file(input$sec2pri_identifiers_file)
+      sec2pri_input_file(input$sec2pri_identifiers_file)
     }
   })
   
-  #Function to make a vector for input identifiers
+  # Function to make a vector for input identifiers
   secIdentifiersList <- reactive({
-    if(!is.null(seq2pri_input_file())){
+    output$sec2pri_metadata <- NULL
+    if(!is.null(sec2pri_input_file())){
       print("Reading identifiers from file...")
-      input_ids <- readLines(seq2pri_input_file()$datapath)
+      input_ids <- readLines(sec2pri_input_file()$datapath)
       # Remove empty or whitespace-only last line
       last_line <- input_ids[length(input_ids)]
       if(nchar(trimws(last_line)) == 0){
@@ -452,7 +450,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # Function to read data related to selected datasource  
+  # Function to read data related to the selected datasource  
   read_data_all <- reactive({
     req(input$sec2priDataSource) 
     if(input$sec2priDataSource == "HGNC Accession number"){
@@ -488,7 +486,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # Function to read primary ids/symbols/names related to selected datasource 
+  # Function to read primary ids/symbols/names related to the selected datasource 
   read_data_primary <- reactive({
     req(input$sec2priDataSource) 
     if(input$sec2priDataSource == "HGNC Accession number"){
@@ -524,8 +522,6 @@ server <- function(input, output, session) {
   
   # Function to calculate the number of primary and secondary identifiers in the input table
   sec2pri_proportion <- reactive({
-    print(secIdentifiersList())
-    
     req(input$sec2priDataSource) 
     # (1) calculate the number of primary and secondary identifiers in the input table
     if(!is.null(input$sec2pri_identifiers_file) | !is.null(input$sec2pri_identifiers)) {
@@ -537,12 +533,13 @@ server <- function(input, output, session) {
       sec <- intersect(unique(secIdentifiersList()), 
                        unique(dataset[[grep(ifelse(input$type == "identifierType", "secondaryID", "secondarySymbol|synonym"), 
                                             colnames(dataset), value = TRUE)]]))
+      pri_sec <- intersect(pri, sec)
       noUnknown <- length(setdiff(setdiff(unique(secIdentifiersList()), pri), sec))
       proportion_table = data.frame(
-        type = c("#input IDs", "#primary", "#secondary", "#unknown"),
-        no = c(noInput, length(pri), length(sec), noUnknown)
+        type = c("#input IDs", "#pri_sec", "#primary", "#secondary", "#unknown"),
+        no = c(noInput, length(pri_sec), length(pri), length(sec), noUnknown)
       )# %>% mutate(prop = no/length(unique(secIdentifiersList())))
-      return(proportion_table[proportion_table$no != 0, ])
+      return(proportion_table)
     }
   })
   
@@ -552,40 +549,118 @@ server <- function(input, output, session) {
     if(!is.null(input$sec2pri_identifiers_file) | !is.null(input$sec2pri_identifiers)) {
       dataset <- read_data_all()
       if(grepl("symbol2alias", input$sec2priDataSource)){
-        seq2pri_table_output <- dataset %>% 
+        sec2pri_table_output <- dataset %>% 
           dplyr::filter(secondarySymbol %in% c(secIdentifiersList())) %>%
           dplyr::select(secondarySymbol, primarySymbol, primaryID, comment) %>%
           dplyr::rename(input = secondarySymbol, `primary symbol` = primarySymbol, `primary ID` = primaryID) %>%
           dplyr::arrange(input, `primary ID`)
       } else if (grepl("name2synonym", input$sec2priDataSource)){
-        seq2pri_table_output <- dataset %>% 
+        sec2pri_table_output <- dataset %>% 
           dplyr::filter(synonym %in% c(secIdentifiersList())) %>%
           dplyr::select(synonym, name, primaryID) %>%
           dplyr::rename(input = synonym, `primary ID` = primaryID) %>%
           dplyr::arrange(input, `primary ID`)
       } else {
-        seq2pri_table_output <- dataset %>% 
+        sec2pri_table_output <- dataset %>% 
           dplyr::filter(secondaryID %in% c(secIdentifiersList())) %>%
           dplyr::select(secondaryID, primaryID) %>%
           dplyr::rename(input = secondaryID, `primary ID` = primaryID) %>%
           dplyr::mutate(input = as.character(input)) %>%
           dplyr::arrange(input, `primary ID`)
       }
-      return(seq2pri_table_output)
+      return(sec2pri_table_output)
     }
   })
   
-  # Function to clear previous outputs
-  # clearPreviousSec2priOutputs <- function() {
-  #   updateTextAreaInput(session, "sec2pri_identifiers", value = "")
-  #   # Reset file input appearance
-  #   js_reset_file_input <- "$('#sec2pri_identifiers_file').val(null); $('.custom-file-label').html('Please upload file..');"
-  #   session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
-  #   seq2pri_mapping$seq2pri_pieChart <- NULL
-  #   seq2pri_mapping$metadata <- NULL
-  # }
-  
+  # Display metadata based on the selected datasource 
+  observeEvent(input$sec2pri_get, {
+    output$sec2pri_metadata <- NULL
+    if (length(secIdentifiersList()) != 0) {
+      sourceVersion <- read.table("processed_mapping_files/dataSourceVersion.tsv", sep = "\t", header = TRUE, as.is = TRUE)
+      sourceVersion <- sourceVersion[match(gsub(" .*", "", input$sec2priDataSource), sourceVersion$datasource),]
+      sourceVersion <- paste0("The data was ", sourceVersion$type, " on ", "<b>", sourceVersion$date, "</b>", ifelse(sourceVersion$type == "queried", " from ", " in "), 
+                              paste0("<a href='", sourceVersion$website, "' target='_blank'>", gsub(" .*", "", input$sec2priDataSource) ," database</a>"), 
+                              ifelse(is.na(sourceVersion$version), ".", paste0(" (version: ", sourceVersion$version, ").")))
+      
+      if (input$sec2priDataSource == "Metabolite name2synonym"){
+        output$sec2pri_metadata <- renderText(HTML("Data is available from <b>HMDB</b>, <b>ChEBI</b>, and <b>Wikidata</b>."))
+      } else if (input$sec2priDataSource == "Gene symbol2alias"){
+        output$sec2pri_metadata <- renderText(HTML("Data is available from <b>HGNC</b> and <b>NCBI</b>."))
+      } else {
+        output$sec2pri_metadata <- renderText(HTML(sourceVersion))
+      }
+      
+    } else if (length(secIdentifiersList()) == 0){
+      output$sec2pri_metadata <- renderText(HTML("<b>No input provided</b>"))
+    }
+  })
 
+  # Display plot and output table 
+  sec2pri_mapping <- reactiveValues(sec2pri_pieChart = NULL, sec2pri_table = NULL)
+  observeEvent(input$sec2pri_get, {
+    # Clear the existing outputs
+    sec2pri_mapping$sec2pri_pieChart <- NULL
+    sec2pri_mapping$sec2pri_table <- NULL
+    
+    if (!is.null(sec2pri_proportion())) {
+      color_palette <- c(`#unknown` = "lightgray", `#primary` = "#96b77d", `#secondary` = "#7da190")
+      color_palette <- color_palette[names(color_palette) %in% sec2pri_proportion()$type]
+      row_order <- c(`#unknown` = 3,  `#primary` = 2, `#secondary` = 1)
+      
+      sec2pri_mapping$sec2pri_pieChart <- 
+        # Function to draw the piechart
+        ggplot(sec2pri_proportion() %>% filter(!type %in% c("#input IDs", "#pri_sec"), no != 0) %>% dplyr::mutate(row_order = row_order[match(type, names(row_order))]),
+               aes(x = reorder(type, row_order), y = no, fill = type)) +
+        geom_col(position = position_dodge(0.9), width = 0.9) +
+        scale_fill_manual(values = color_palette) +
+        coord_flip() +
+        plot_theme + 
+        ggtitle(ifelse(is.na(sec2pri_proportion()$no[1]), "",
+                       paste0(sec2pri_proportion()$no[1], ifelse(input$type == "identifierType", " (unique) input identifiers", " (unique) input symbols/names"), ":"))) +
+        labs(subtitle = ifelse(sec2pri_proportion()$no[2] == 0, "",
+                              paste0(sec2pri_proportion()$no[2], " (unique) input", ifelse(sec2pri_proportion()$no[2] == 1, " is ", "s are "), "both primary and secondary."))) +
+        geom_text(aes(y = no, label = no), size = 6,
+                  position = position_stack(vjust = .5)) +
+        theme(plot.margin = unit(c(1, 1, -0.5, 1), "cm"))
+    }
+
+    if(nrow(sec2pri_output()) != 0) {
+      sec2pri_mapping$sec2pri_table <- req(
+        DT::datatable(sec2pri_output(),
+                      options = list(orderClasses = TRUE,
+                                     lengthMenu = c(10, 25, 50, 100),
+                                     pageLength = 10),
+                      rownames = FALSE,
+                      caption = htmltools::tags$caption(style = 'caption-side: top; text-align: left; color:black; font-weight: bold;',
+                                              "Only the mapping results for the secondary inputs are shown:"),
+        )%>%
+          formatStyle(
+            columns = "input",
+            backgroundColor = '#7da190',
+            color = 'white'
+          )
+      )
+    } 
+  }, ignoreInit = TRUE)
+  
+  # Update output display
+  output$sec2pri_piechart_results <- renderPlot({
+    if (length(secIdentifiersList()) != 0) {
+      sec2pri_mapping$sec2pri_pieChart
+    } else {
+      NULL
+    }
+  },  height = 200, width = 400)
+  output$sec2pri_mapping_results <- 
+    renderDT({
+      if (length(secIdentifiersList()) != 0) {
+        sec2pri_mapping$sec2pri_table
+      } else {
+        NULL
+      }
+    })
+  
+  # Define output format
   output$downloadFormatUI <- renderUI({
     dataSource <- input$sec2priDataSource
     downloadFormats <- if (!is.null(dataSource) && grepl("name2synonym", dataSource)) {
@@ -602,54 +677,7 @@ server <- function(input, output, session) {
     )
   })  
   
-  seq2pri_mapping <- reactiveValues(seq2pri_pieChart = NULL, seq2pri_table = NULL)
-  
-  observeEvent(input$sec2pri_get, {
-    # Clear the existing outputs
-    seq2pri_mapping$seq2pri_pieChart <- NULL
-    seq2pri_mapping$seq2pri_table <- NULL
-    
-    if (!is.null(sec2pri_proportion())) {
-      seq2pri_mapping$seq2pri_pieChart <- 
-        # Function to draw the piechart
-        ggplot(sec2pri_proportion() [c(-1), ],
-               aes(x = type, y = no, fill = type)) +
-        geom_col(position = position_dodge(0.9), width = 0.9) +
-        scale_fill_brewer(palette = "Blues") +
-        coord_flip() +
-        plot_theme + 
-        ggtitle(ifelse(is.na(sec2pri_proportion()$no[1]), "No input provided",
-                       paste0(sec2pri_proportion()$no[1], ifelse(input$type == "identifierType", " (unique) input identifiers", " (unique) input symbols/names")))) +
-        geom_text(aes(y = no, label = no), size = 6,
-                  position = position_stack(vjust = .5)) +
-        theme(plot.margin = unit(c(1, 1, -0.5, 1), "cm"))
-    }
-
-    if(nrow(sec2pri_output()) != 0) {
-      seq2pri_mapping$seq2pri_table <- req(
-        DT::datatable(sec2pri_output(),
-                      options = list(orderClasses = TRUE,
-                                     lengthMenu = c(10, 25, 50, 100),
-                                     pageLength = 10),
-                      caption = htmltools::tags$caption(style = 'caption-side: top; text-align: left; color:black; font-weight: bold;',
-                                              "Only the mapping results for the secondary inputs are shown:"),
-        )
-      )
-    } 
-  }, ignoreInit = TRUE)
-  
-  # Update output display
-  output$sec2pri_mapping_results <- 
-    renderDT({
-      if (length(secIdentifiersList()) != 0) {
-        seq2pri_mapping$seq2pri_table
-      } else {
-        NULL
-      }
-    })
-
-
-  ## Download results
+  # Download results
   output$sec2pri_download <- downloadHandler(
     filename = function() {
       paste0("IDRefiner_mapping_", gsub(" ", "_", input$sec2priDataSource), ".", input$sec2pri_download_format)
@@ -747,7 +775,6 @@ server <- function(input, output, session) {
             output <- output %>% dplyr::rename(subject_id = secondaryID , subject_label = secondarySymbol, predicate_id = predicateID,
                                                object_id = primaryID, object_label = primarySymbol, mapping_cardinality = mapping_cardinality_sec2pri) 
           } else if(input$sec2priDataSource == "UniProt"){
-            print("I am here")
             if(length(primaryIDs) == 0){
               output <- dataset %>% 
                 dplyr::filter(secondaryID %in% c(secIdentifiersList())) %>% # input is secondary ID 
@@ -799,8 +826,6 @@ server <- function(input, output, session) {
                                       ifelse(sourceVersion$type == "queried", " on ", " and downloaded on "), sourceVersion$date, ifelse(sourceVersion$type == "queried", ".", paste0(" (version: ", sourceVersion$version, ").")))
             }
             
-            print(sourceVersion)
-            
             if(length(primaryIDs) == 0){
               output <-  dataset %>% 
                 dplyr::filter(synonym %in% c(secIdentifiersList())) %>% # input is secondary ID 
@@ -847,7 +872,7 @@ server <- function(input, output, session) {
       }
     })
   
-  
+  # (In)Active download button
   observe({
     if(nrow(sec2pri_output()) == 0) {
       shinyjs::disable("sec2pri_download")
@@ -856,38 +881,16 @@ server <- function(input, output, session) {
     }
   })
   
-
-  output$sec2pri_piechart_results <- renderPlot({
-    seq2pri_mapping$seq2pri_pieChart
-  },  height = 200, width = 400)
-  
-  observeEvent(input$sec2pri_get, {
-    sourceVersion <- read.table("processed_mapping_files/dataSourceVersion.tsv", sep = "\t", header = TRUE, as.is = TRUE)
-    sourceVersion <- sourceVersion[match(gsub(" .*", "", input$sec2priDataSource), sourceVersion$datasource),]
-    sourceVersion <- paste0("The data was ", sourceVersion$type, " on ", "<b>", sourceVersion$date, "</b>", ifelse(sourceVersion$type == "queried", " from ", " in "), 
-                            paste0("<a href='", sourceVersion$website, "' target='_blank'>", gsub(" .*", "", input$sec2priDataSource) ," database</a>"), 
-                            ifelse(is.na(sourceVersion$version), ".", paste0(" (version: ", sourceVersion$version, ").")))
-    
-    if (input$sec2priDataSource == "Metabolite name2synonym"){
-      output$sec2pri_metadata <- renderText(HTML("Data is available from HMDB, ChEBI, and Wikidata."))
-    } else if (input$sec2priDataSource == "Gene symbol2alias"){
-      output$sec2pri_metadata <- renderText(HTML("Data is available from HGNC and NCBI."))
-    } else {
-      output$sec2pri_metadata <- renderText(HTML(sourceVersion))
-    }
-    
-  })
-  
   # Handle clearing of input and output
   observeEvent(input$sec2pri_clear_list, {
     # updateTextAreaInput(session, "sec2pri_identifiers", value = "")
     # Reset file input appearance
-    # seq2pri_input_file(NULL) # Reset the file input
+    # sec2pri_input_file(NULL) # Reset the file input
     # js_reset_file_input <- "$('#sec2pri_identifiers_file').val(null); $('.custom-file-label').html('Please upload file..');"
     # session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
-    seq2pri_mapping$seq2pri_pieChart <- NULL
+    sec2pri_mapping$sec2pri_pieChart <- NULL
     output$sec2pri_metadata <- NULL 
-    seq2pri_mapping$seq2pri_table <- NULL
+    sec2pri_mapping$sec2pri_table <- NULL
   })
   
   # add BridgeDb logo (in the text)
@@ -1048,16 +1051,6 @@ server <- function(input, output, session) {
     }
   })
   
-  # Function to clear previous outputs
-  # clearPreviousOutputs <- function() {
-  #   updateTextAreaInput(session, "BridgeDb_identifiers", value = "")
-  #   BridgeDb_input_file(NULL) # Reset the file input
-  #   # Reset file input appearance
-  #   js_reset_file_input <- "$('#BridgeDb_input_file').val(null); $('.custom-file-label').html('Please upload file..');"
-  #   session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
-  #   BridgeDb_mapping$BridgeDb_table <- NULL
-  # }
-  
   BridgeDb_mapping <- reactiveValues(BridgeDb_table = NULL)
   observeEvent(input$BridgeDb_get, {
     BridgeDb_mapping$BridgeDb_table <- NULL
@@ -1067,7 +1060,8 @@ server <- function(input, output, session) {
         DT::datatable(BridgeDb_output(),
                       options = list(orderClasses = TRUE,
                                      lengthMenu = c(10, 25, 50, 100),
-                                     pageLength = 10)
+                                     pageLength = 10),
+                      rownames = FALSE
         )
       )
     } 
