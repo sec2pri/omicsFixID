@@ -216,7 +216,7 @@ ui <- fluidPage(
                 "sec2pri_get", "Refine IDs",
                 style = "color: white; background-color: #004578; border-color: #004578"),
               actionButton(
-                "sec2pri_clear_list", "Clear",
+                "sec2pri_clear_list", "Clear results",
                 style = "color: white; background-color: #004578; border-color: #004578"),
               br(),
               br(),
@@ -295,7 +295,7 @@ ui <- fluidPage(
                 "BridgeDb_get", "Bridge IDs",
                 style = "color: white; background-color: #004578; border-color: #004578"),
               actionButton(
-                "BridgeDb_clear_list", "Clear",
+                "BridgeDb_clear_list", "Clear results",
                 style = "color: white; background-color: #004578; border-color: #004578"),
               br(),
               br(),
@@ -880,11 +880,11 @@ server <- function(input, output, session) {
   
   # Handle clearing of input and output
   observeEvent(input$sec2pri_clear_list, {
-    updateTextAreaInput(session, "sec2pri_identifiers", value = "")
+    # updateTextAreaInput(session, "sec2pri_identifiers", value = "")
     # Reset file input appearance
-    seq2pri_input_file(NULL) # Reset the file input
-    js_reset_file_input <- "$('#sec2pri_identifiers_file').val(null); $('.custom-file-label').html('Please upload file..');"
-    session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
+    # seq2pri_input_file(NULL) # Reset the file input
+    # js_reset_file_input <- "$('#sec2pri_identifiers_file').val(null); $('.custom-file-label').html('Please upload file..');"
+    # session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
     seq2pri_mapping$seq2pri_pieChart <- NULL
     output$sec2pri_metadata <- NULL 
     seq2pri_mapping$seq2pri_table <- NULL
@@ -1107,11 +1107,11 @@ server <- function(input, output, session) {
   
   # Handle clearing of input and output
   observeEvent(input$BridgeDb_clear_list, {
-    updateTextAreaInput(session, "BridgeDb_identifiers", value = "")
-    BridgeDb_input_file(NULL) # Reset the file input
+    # updateTextAreaInput(session, "BridgeDb_identifiers", value = "")
+    # BridgeDb_input_file(NULL) # Reset the file input
     # Reset file input appearance
-    js_reset_file_input <- "$('#BridgeDb_input_file').val(null); $('.custom-file-label').html('Please upload file..');"
-    session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
+    # js_reset_file_input <- "$('#BridgeDb_input_file').val(null); $('.custom-file-label').html('Please upload file..');"
+    # session$sendCustomMessage(type = 'jsCode', message = js_reset_file_input)
     BridgeDb_mapping$BridgeDb_table <- NULL
   })
   
