@@ -237,6 +237,7 @@ ui <- fluidPage(
             style = "margin-left: 0px; padding: 20px;",
             div(htmlOutput("sec2pri_metadata")),
             div(plotOutput("sec2pri_piechart_results", height = "200px"), class = "my-plot"),
+            actionButton("copyPrimaryID", "Copy"),
             div(DTOutput("sec2pri_mapping_results"), style = "margin-top: -100px;")
           )
         )
@@ -626,14 +627,16 @@ server <- function(input, output, session) {
 
     if(nrow(sec2pri_output()) != 0) {
       sec2pri_mapping$sec2pri_table <- req(
-        DT::datatable(sec2pri_output(),
+        DT::datatable(sec2pri_output(), callback = JS("$('div.button').append($('#copyPrimaryID'));"), 
                       options = list(orderClasses = TRUE,
                                      lengthMenu = c(10, 25, 50, 100),
-                                     pageLength = 10),
+                                     pageLength = 10,
+                                     dom = '<"row"<"col-sm-4"l><"col-sm-4 text-center"<"button">><"col-sm-4"f>>tip'
+                      ),
                       rownames = FALSE,
                       caption = htmltools::tags$caption(style = 'caption-side: top; text-align: left; color:black; font-weight: bold;',
-                                              "Only the mapping results for the secondary inputs are shown:"),
-        )%>%
+                                              "Only the mapping results for the secondary inputs are shown:")
+        ) %>%
           formatStyle(
             columns = "input",
             backgroundColor = '#7da190',
