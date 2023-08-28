@@ -459,19 +459,19 @@ server <- function(input, output, session) {
     } else if(input$sec2priDataSource == "HGNC symbol2alias"){
       dataset <- data.table::fread("processed_mapping_files/HGNC_symbol2alia&prev.tsv")
     } else if(input$sec2priDataSource == "ChEBI name2synonym"){
-      dataset <- data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv") 
+      dataset <- data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv")
     } else if(input$sec2priDataSource == "HMDB name2synonym"){
       dataset <- data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv")
     } else if(input$sec2priDataSource == "Metabolite name2synonym"){
       dataset <- dplyr::bind_rows(HMDB = data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv"),
                                   ChEBI = data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv"), 
-                                  Wikidata = data.table::fread("processed_mapping_files/Wikidata_name2synonym.tsv"), .id = "sourceFile")
+                                  Wikidata = data.table::fread("processed_mapping_files/Wikidata_metabolites_name2synonym.tsv"), .id = "sourceFile")
     } else if(input$sec2priDataSource == "Wikidata metabolites"){
       dataset <- data.table::fread("processed_mapping_files/Wikidata_metabolites_secID2priID.tsv")
     } else if(input$sec2priDataSource == "Wikidata genes/proteins"){
       dataset <- data.table::fread("processed_mapping_files/Wikidata_geneProtein_secID2priID.tsv")
     } else if(input$sec2priDataSource == "Wikidata name2synonym"){
-      dataset <- data.table::fread("processed_mapping_files/Wikidata_name2synonym.tsv")
+      dataset <- data.table::fread("processed_mapping_files/Wikidata_metabolites_name2synonym.tsv")
     } else if(input$sec2priDataSource == "Gene symbol2alias"){
       dataset <- dplyr::bind_rows(HGNC = data.table::fread("processed_mapping_files/HGNC_symbol2alia&prev.tsv"),
                                   NCBI = data.table::fread("processed_mapping_files/NCBI_symbol2alia&prev.tsv") %>%
@@ -499,23 +499,23 @@ server <- function(input, output, session) {
     } else if(input$sec2priDataSource == "NCBI symbol2alias"){
       priID_list <- unique(data.table::fread("processed_mapping_files/NCBI_priIDs.tsv")[["primarySymbol"]])
     } else if(input$sec2priDataSource == "ChEBI name2synonym"){
-      priID_list <- unique(data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv")[["name"]])
+      priID_list <- unique(data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv")[["name"]]) ##TODO: check the other file priIDs
     } else if(input$sec2priDataSource == "HMDB name2synonym"){
-      priID_list <- unique(data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv", fill = TRUE)[["name"]])
+      priID_list <- unique(data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv", fill = TRUE)[["name"]]) ##TODO: check the other file priIDs
     } else if(input$sec2priDataSource == "Wikidata metabolites"){
       priID_list <- unique(data.table::fread("processed_mapping_files/Wikidata_metabolites_priIDs.tsv")[["primaryID"]])
     } else if(input$sec2priDataSource == "Wikidata genes/proteins"){
       priID_list <- unique(data.table::fread("processed_mapping_files/Wikidata_geneProtein_priIDs.tsv")[["primaryID"]])
     } else if(input$sec2priDataSource == "Metabolite name2synonym"){
-      priID_list <- unique(c(data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv", fill = TRUE)[["name"]],
-                             data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv")[["name"]],
-                             data.table::fread("processed_mapping_files/Wikidata_name2synonym.tsv")[["name"]]))
+      priID_list <- unique(c(data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv", fill = TRUE)[["name"]], ##TODO: check the other file priIDs
+                             data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv")[["name"]], ##TODO: check the other file priIDs
+                             data.table::fread("processed_mapping_files/Wikidata_metabolites_name2synonym.tsv")[["name"]]))
     } else if(input$sec2priDataSource == "Gene symbol2alias"){
       priID_list <- unique(c(data.table::fread("processed_mapping_files/NCBI_priIDs.tsv", fill = TRUE)[["primarySymbol"]],
                              data.table::fread("processed_mapping_files/HGNC_priIDs.tsv")[["primarySymbol"]]))
+    } else if(input$sec2priDataSource == "Wikidata name2synonym"){
+      priID_list <- unique(data.table::fread("processed_mapping_files/Wikidata_metabolites_name2synonym.tsv")[["name"]])
       
-    } else if(input$sec2priDataSource == "Wikidata name2synonym"){ ##TODO: check the other file priIDs
-      priID_list <- unique(data.table::fread("processed_mapping_files/Wikidata_name2synonym.tsv", fill = TRUE)[["name"]])
     } else {
       priID_list <- unique(unlist(data.table::fread(paste0("processed_mapping_files/", input$sec2priDataSource, "_priIDs.tsv"))))
     }
