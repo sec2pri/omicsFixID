@@ -5,7 +5,7 @@ account: tabbassidaloii
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 9644155
-bundleId:
+bundleId: 7616272
 url: https://tabbassidaloii.shinyapps.io/OmicsIDRefiner/
 asMultiple: FALSE
 asStatic: FALSE

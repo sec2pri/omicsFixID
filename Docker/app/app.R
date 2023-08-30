@@ -10,8 +10,6 @@ library(shiny)
 library(DT)
 library(data.table)
 library(rjson)
-# library(shinyBS)
-# library(shinyjs)
 
 
 # Load required functions and data
