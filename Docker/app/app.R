@@ -382,9 +382,9 @@ server <- function(input, output, session) {
         selectInput(
           inputId = 'sec2priDataSource', 
           label = HTML(paste("Choose the data source&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='", tooltips$description[tooltips$tooltip == "Data source"], "'></i> :")),
-          choices = c("Metabolite name2synonym", "ChEBI name2synonym", "HMDB name2synonym", "Wikidata name2synonym",
-                      "Gene symbol2alias", "HGNC symbol2alias", "NCBI symbol2alias"),
-          selected = "ChEBI name2synonym" 
+          choices = c("Metabolite synonym2name", "ChEBI synonym2name", "HMDB synonym2name", "Wikidata synonym2name",
+                      "Gene alias2symbol", "HGNC alias2symbol", "NCBI alias2symbol"),
+          selected = "ChEBI synonym2name" 
         )
       })
     }
@@ -397,20 +397,20 @@ server <- function(input, output, session) {
     sec2pri_mapping$sec2pri_table <- NULL
     output$sec2pri_metadata <- NULL
     updateTextAreaInput(session, "sec2pri_identifiers",
-                        value = ifelse(input$sec2priDataSource == "HGNC symbol2alias", "HOXA11\nHOX12\nCD31", 
+                        value = ifelse(input$sec2priDataSource == "HGNC alias2symbol", "HOXA11\nHOX12\nCD31", 
                                        ifelse(input$sec2priDataSource == "HGNC Accession number","HGNC:24\nHGNC:32\nHGNC:13349\nHGNC:7287\n",
                                               ifelse(input$sec2priDataSource == "HMDB","HMDB0000005\nHMDB0004990\nHMDB60172\nHMDB00016",
-                                                     ifelse(input$sec2priDataSource == "HMDB name2synonym","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\nPi-methylhistidine\nCS2\nrenzapride",
+                                                     ifelse(input$sec2priDataSource == "HMDB synonym2name","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\nPi-methylhistidine\nCS2\nrenzapride",
                                                             ifelse(input$sec2priDataSource == "ChEBI", "CHEBI:20245\nCHEBI:136845\nCHEBI:656608\nCHEBI:4932",
                                                                    ifelse(input$sec2priDataSource == "Wikidata metabolites","Q422964\nQ25500867\nQ16634192",
                                                                           ifelse(input$sec2priDataSource == "Wikidata genes/proteins","Q21118320\nQ21119955\nQ21122914",
-                                                                                 ifelse(input$sec2priDataSource == "Wikidata name2synonym","antifade\nCS2\n",
-                                                                                        ifelse(input$sec2priDataSource == "ChEBI name2synonym","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\n2-Hydroxybutanoic acid",
+                                                                                 ifelse(input$sec2priDataSource == "Wikidata synonym2name","antifade\nCS2\n",
+                                                                                        ifelse(input$sec2priDataSource == "ChEBI synonym2name","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\n2-Hydroxybutanoic acid",
                                                                                                ifelse(input$sec2priDataSource == "UniProt","A0A011PKA5\nA0A016SR66\nP9WES5",
-                                                                                                      ifelse(input$sec2priDataSource == "Metabolite name2synonym","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\nPi-methylhistidine\nCS2\nrenzapride",
+                                                                                                      ifelse(input$sec2priDataSource == "Metabolite synonym2name","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\nPi-methylhistidine\nCS2\nrenzapride",
                                                                                                              ifelse(input$sec2priDataSource == "NCBI","61\n76\n79839\n99",
-                                                                                                                    ifelse(input$sec2priDataSource == "NCBI symbol2alias","S863-7\nNAT1\nEIEE29",
-                                                                                                                           ifelse(input$sec2priDataSource == "Gene symbol2alias","S863-7\nNAT1\nEIEE29\nHOXA11\nHOX12\nCD31",
+                                                                                                                    ifelse(input$sec2priDataSource == "NCBI alias2symbol","S863-7\nNAT1\nEIEE29",
+                                                                                                                           ifelse(input$sec2priDataSource == "Gene alias2symbol","S863-7\nNAT1\nEIEE29\nHOXA11\nHOX12\nCD31",
                                                                                                                                   ""))))))))))))))
     )
     })
@@ -454,28 +454,28 @@ server <- function(input, output, session) {
     req(input$sec2priDataSource) 
     if(input$sec2priDataSource == "HGNC Accession number"){
       dataset <- data.table::fread("processed_mapping_files/HGNC_secID2priID.tsv")
-    } else if(input$sec2priDataSource == "HGNC symbol2alias"){
-      dataset <- data.table::fread("processed_mapping_files/HGNC_symbol2alia&prev.tsv")
-    } else if(input$sec2priDataSource == "ChEBI name2synonym"){
-      dataset <- data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv")
-    } else if(input$sec2priDataSource == "HMDB name2synonym"){
-      dataset <- data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv")
-    } else if(input$sec2priDataSource == "Metabolite name2synonym"){
-      dataset <- dplyr::bind_rows(HMDB = data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv"),
-                                  ChEBI = data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv"), 
-                                  Wikidata = data.table::fread("processed_mapping_files/Wikidata_metabolites_name2synonym.tsv"), .id = "sourceFile")
+    } else if(input$sec2priDataSource == "HGNC alias2symbol"){
+      dataset <- data.table::fread("processed_mapping_files/HGNC_alias&prev2symbol.tsv")
+    } else if(input$sec2priDataSource == "ChEBI synonym2name"){
+      dataset <- data.table::fread("processed_mapping_files/ChEBI_synonym2name.tsv")
+    } else if(input$sec2priDataSource == "HMDB synonym2name"){
+      dataset <- data.table::fread("processed_mapping_files/HMDB_synonym2name.tsv")
+    } else if(input$sec2priDataSource == "Metabolite synonym2name"){
+      dataset <- dplyr::bind_rows(HMDB = data.table::fread("processed_mapping_files/HMDB_synonym2name.tsv"),
+                                  ChEBI = data.table::fread("processed_mapping_files/ChEBI_synonym2name.tsv"), 
+                                  Wikidata = data.table::fread("processed_mapping_files/Wikidata_metabolites_synonym2name.tsv"), .id = "sourceFile")
     } else if(input$sec2priDataSource == "Wikidata metabolites"){
       dataset <- data.table::fread("processed_mapping_files/Wikidata_metabolites_secID2priID.tsv")
     } else if(input$sec2priDataSource == "Wikidata genes/proteins"){
       dataset <- data.table::fread("processed_mapping_files/Wikidata_geneProtein_secID2priID.tsv")
-    } else if(input$sec2priDataSource == "Wikidata name2synonym"){
-      dataset <- data.table::fread("processed_mapping_files/Wikidata_metabolites_name2synonym.tsv")
-    } else if(input$sec2priDataSource == "Gene symbol2alias"){
-      dataset <- dplyr::bind_rows(HGNC = data.table::fread("processed_mapping_files/HGNC_symbol2alia&prev.tsv"),
-                                  NCBI = data.table::fread("processed_mapping_files/NCBI_symbol2alia&prev.tsv") %>%
+    } else if(input$sec2priDataSource == "Wikidata synonym2name"){
+      dataset <- data.table::fread("processed_mapping_files/Wikidata_metabolites_synonym2name.tsv")
+    } else if(input$sec2priDataSource == "Gene alias2symbol"){
+      dataset <- dplyr::bind_rows(HGNC = data.table::fread("processed_mapping_files/HGNC_alias&prev2symbol.tsv"),
+                                  NCBI = data.table::fread("processed_mapping_files/NCBI_alias&prev2symbol.tsv") %>%
                                     dplyr::mutate(primaryID = as.character(primaryID)), .id = "sourceFile")
-    } else if(input$sec2priDataSource == "NCBI symbol2alias"){
-      dataset <- data.table::fread("processed_mapping_files/NCBI_symbol2alia&prev.tsv") %>%
+    } else if(input$sec2priDataSource == "NCBI alias2symbol"){
+      dataset <- data.table::fread("processed_mapping_files/NCBI_alias&prev2symbol.tsv") %>%
         dplyr::mutate(primaryID = as.character(primaryID))
     } else if(input$sec2priDataSource == "NCBI"){
       dataset <- data.table::fread("processed_mapping_files/NCBI_secID2priID.tsv") %>%
@@ -490,29 +490,29 @@ server <- function(input, output, session) {
     req(input$sec2priDataSource) 
     if(input$sec2priDataSource == "HGNC Accession number"){
       priID_list <- unique(data.table::fread("processed_mapping_files/HGNC_priIDs.tsv")[["primaryID"]])
-    } else if(input$sec2priDataSource == "HGNC symbol2alias"){
+    } else if(input$sec2priDataSource == "HGNC alias2symbol"){
       priID_list <- unique(data.table::fread("processed_mapping_files/HGNC_priIDs.tsv")[["primarySymbol"]])
     } else if(input$sec2priDataSource == "NCBI"){
       priID_list <- unique(data.table::fread("processed_mapping_files/NCBI_priIDs.tsv")[["primaryID"]])
-    } else if(input$sec2priDataSource == "NCBI symbol2alias"){
+    } else if(input$sec2priDataSource == "NCBI alias2symbol"){
       priID_list <- unique(data.table::fread("processed_mapping_files/NCBI_priIDs.tsv")[["primarySymbol"]])
-    } else if(input$sec2priDataSource == "ChEBI name2synonym"){
-      priID_list <- unique(data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv")[["name"]]) ##TODO: check the other file priIDs
-    } else if(input$sec2priDataSource == "HMDB name2synonym"){
-      priID_list <- unique(data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv", fill = TRUE)[["name"]]) ##TODO: check the other file priIDs
+    } else if(input$sec2priDataSource == "ChEBI synonym2name"){
+      priID_list <- unique(data.table::fread("processed_mapping_files/ChEBI_synonym2name.tsv")[["name"]]) ##TODO: check the other file priIDs
+    } else if(input$sec2priDataSource == "HMDB synonym2name"){
+      priID_list <- unique(data.table::fread("processed_mapping_files/HMDB_synonym2name.tsv", fill = TRUE)[["name"]]) ##TODO: check the other file priIDs
     } else if(input$sec2priDataSource == "Wikidata metabolites"){
       priID_list <- unique(data.table::fread("processed_mapping_files/Wikidata_metabolites_priIDs.tsv")[["primaryID"]])
     } else if(input$sec2priDataSource == "Wikidata genes/proteins"){
       priID_list <- unique(data.table::fread("processed_mapping_files/Wikidata_geneProtein_priIDs.tsv")[["primaryID"]])
-    } else if(input$sec2priDataSource == "Metabolite name2synonym"){
-      priID_list <- unique(c(data.table::fread("processed_mapping_files/HMDB_name2synonym.tsv", fill = TRUE)[["name"]], ##TODO: check the other file priIDs
-                             data.table::fread("processed_mapping_files/ChEBI_name2synonym.tsv")[["name"]], ##TODO: check the other file priIDs
-                             data.table::fread("processed_mapping_files/Wikidata_metabolites_name2synonym.tsv")[["name"]]))
-    } else if(input$sec2priDataSource == "Gene symbol2alias"){
+    } else if(input$sec2priDataSource == "Metabolite synonym2name"){
+      priID_list <- unique(c(data.table::fread("processed_mapping_files/HMDB_synonym2name.tsv", fill = TRUE)[["name"]], ##TODO: check the other file priIDs
+                             data.table::fread("processed_mapping_files/ChEBI_synonym2name.tsv")[["name"]], ##TODO: check the other file priIDs
+                             data.table::fread("processed_mapping_files/Wikidata_metabolites_synonym2name.tsv")[["name"]]))
+    } else if(input$sec2priDataSource == "Gene alias2symbol"){
       priID_list <- unique(c(data.table::fread("processed_mapping_files/NCBI_priIDs.tsv", fill = TRUE)[["primarySymbol"]],
                              data.table::fread("processed_mapping_files/HGNC_priIDs.tsv")[["primarySymbol"]]))
-    } else if(input$sec2priDataSource == "Wikidata name2synonym"){
-      priID_list <- unique(data.table::fread("processed_mapping_files/Wikidata_metabolites_name2synonym.tsv")[["name"]])
+    } else if(input$sec2priDataSource == "Wikidata synonym2name"){
+      priID_list <- unique(data.table::fread("processed_mapping_files/Wikidata_metabolites_synonym2name.tsv")[["name"]])
       
     } else {
       priID_list <- unique(unlist(data.table::fread(paste0("processed_mapping_files/", input$sec2priDataSource, "_priIDs.tsv"))))
@@ -547,13 +547,13 @@ server <- function(input, output, session) {
     req(input$sec2priDataSource)
     if(!is.null(input$sec2pri_identifiers_file) | !is.null(input$sec2pri_identifiers)) {
       dataset <- read_data_all()
-      if(grepl("symbol2alias", input$sec2priDataSource)){
+      if(grepl("alias2symbol", input$sec2priDataSource)){
         sec2pri_table_output <- dataset %>% 
           dplyr::filter(secondarySymbol %in% c(secIdentifiersList())) %>%
           dplyr::select(secondarySymbol, primarySymbol, primaryID, comment) %>%
           dplyr::rename(input = secondarySymbol, `primary symbol` = primarySymbol, `primary ID` = primaryID) %>%
           dplyr::arrange(input, `primary ID`)
-      } else if (grepl("name2synonym", input$sec2priDataSource)){
+      } else if (grepl("synonym2name", input$sec2priDataSource)){
         sec2pri_table_output <- dataset %>% 
           dplyr::filter(synonym %in% c(secIdentifiersList())) %>%
           dplyr::select(synonym, name, primaryID) %>%
@@ -581,9 +581,9 @@ server <- function(input, output, session) {
                               paste0("<a href='", sourceVersion$website, "' target='_blank'>", gsub(" .*", "", input$sec2priDataSource) ," database</a>"), 
                               ifelse(is.na(sourceVersion$version), ".", paste0(" (version: ", sourceVersion$version, ").")))
       
-      if (input$sec2priDataSource == "Metabolite name2synonym"){
+      if (input$sec2priDataSource == "Metabolite synonym2name"){
         output$sec2pri_metadata <- renderText(HTML("Data is available from <b>HMDB</b>, <b>ChEBI</b>, and <b>Wikidata</b>."))
-      } else if (input$sec2priDataSource == "Gene symbol2alias"){
+      } else if (input$sec2priDataSource == "Gene alias2symbol"){
         output$sec2pri_metadata <- renderText(HTML("Data is available from <b>HGNC</b> and <b>NCBI</b>."))
       } else {
         output$sec2pri_metadata <- renderText(HTML(sourceVersion))
@@ -663,10 +663,18 @@ server <- function(input, output, session) {
       }
     })
   
+  #  PriIDList <- reactive({
+  #   if (nrow(sec2pri_output()) != 0) {
+  #     
+  #   }
+  # })
+  
+  # output$copyPrimaryID <- PriIDList()
+      
   # Define output format
   output$downloadFormatUI <- renderUI({
     dataSource <- input$sec2priDataSource
-    downloadFormats <- if (!is.null(dataSource) && grepl("name2synonym", dataSource)) {
+    downloadFormats <- if (!is.null(dataSource) && grepl("synonym2name", dataSource)) {
       c("tsv", "sssom.tsv")
     } else {
       c("csv", "tsv", "sssom.tsv")
@@ -703,13 +711,13 @@ server <- function(input, output, session) {
                 data.frame(input = as.character(primaryIDs),
                            `primary ID` = as.character(primaryIDs),
                            comment = "The input is a primary ID.", check.names = FALSE))
-          } else if(grep("symbol2alias", input$sec2priDataSource)){
+          } else if(grep("alias2symbol", input$sec2priDataSource)){
             output <- dplyr::bind_rows(
               sec2pri_output(),
               data.frame(input = primaryIDs, `primary symbol` = primaryIDs, comment = "The input is a primary gene symbol.", check.names = FALSE) %>%
                 mutate(`primary ID` = dataset$primaryID[match(`primary symbol`, dataset$primarySymbol)])
             )
-          } else if(grep("name2synonym", input$sec2priDataSource)){
+          } else if(grep("synonym2name", input$sec2priDataSource)){
             output <- dplyr::bind_rows(
               sec2pri_output(),
               data.frame(input = primaryIDs, name = primaryIDs, comment = "The input is a primary metabolite name.", check.names = FALSE) %>%
@@ -752,7 +760,7 @@ server <- function(input, output, session) {
                                                object_id = primaryID, object_label = primarySymbol, mapping_cardinality = mapping_cardinality_sec2pri) 
             
           
-            } else if(grepl("symbol2alias", input$sec2priDataSource)){
+            } else if(grepl("alias2symbol", input$sec2priDataSource)){
             if(length(primaryIDs) == 0){
               output <- dataset %>% 
                 dplyr::filter(secondarySymbol %in% c(secIdentifiersList())) %>% # input is secondary ID 
@@ -821,7 +829,7 @@ server <- function(input, output, session) {
               )}
             output <- output %>% dplyr::rename(subject_id = secondaryID, object_id = primaryID)
           
-            } else if(grepl("name2synonym", input$sec2priDataSource)){
+            } else if(grepl("synonym2name", input$sec2priDataSource)){
             sourceVersion <- read.table("processed_mapping_files/dataSourceVersion.tsv", sep = "\t", header = TRUE)
             if(grepl("HMDB|ChEBI|Wikidata", input$sec2priDataSource)){
               sourceVersion <- sourceVersion[match(gsub(" .*", "", input$sec2priDataSource), sourceVersion$datasource),]
@@ -851,7 +859,7 @@ server <- function(input, output, session) {
               )}
             output <- output %>% dplyr::rename(subject_id = secondaryID, subject_label = synonym, object_id = primaryID, object_label = name)
             
-            if(input$sec2priDataSource == "Metabolite name2synonym"){
+            if(input$sec2priDataSource == "Metabolite synonym2name"){
               sourceVersion <- sourceVersion[match(sourceFile, sourceVersion$datasource),]
               sourceVersion <- paste0("The data was ", sourceVersion$type, ifelse(sourceVersion$type == "queried", " from ", " on "), sourceVersion$website, 
                                       ifelse(sourceVersion$type == "queried", " on ", " and downloaded on "), sourceVersion$date, ifelse(sourceVersion$type == "queried", ".", paste0(" (version: ", sourceVersion$version, ").")))
@@ -863,7 +871,7 @@ server <- function(input, output, session) {
           # Add unknown IDs
           if(length(unknownIDs) != 0){
             unknownData <- data.frame(subject = unknownIDs, comment = "The input is unknown.", check.names = FALSE)
-            colnames(unknownData)[1] = ifelse(grepl("name2synonym|symbol2alias", input$sec2priDataSource), "subject_label", "subject_id")
+            colnames(unknownData)[1] = ifelse(grepl("synonym2name|alias2symbol", input$sec2priDataSource), "subject_label", "subject_id")
             output <- dplyr::bind_rows(output, unknownData) 
           }
           
@@ -949,7 +957,7 @@ server <- function(input, output, session) {
           inputId = 'inputDataSource', 
           label = 'Choose the input data source:',
           choices = sort(dataSources$source[dataSources$type == "gene"]),
-          selected = "HGNC symbol2alias"
+          selected = "HGNC alias2symbol"
         )
       })
     } else if(input$type_BridgeDb == "metabolite") {
