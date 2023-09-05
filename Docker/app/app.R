@@ -28,8 +28,9 @@ ui <- fluidPage(
                padding-top: 60px; /* adjust this value as needed */
              }
              .my-plot {
-               height: 300px; /* set the height of the plot */
+               height: 200px; /* set the height of the plot */
                margin-bottom: 10px; /* add a small margin at the bottom */
+               margin-left: 10px;
              }
              .my-table {
                height: 500px; /* set the height of the table */
@@ -37,7 +38,7 @@ ui <- fluidPage(
              }
              .navbar {
                margin-bottom: 0px !important;
-               margin-top: 0px!important!
+               margin-top: 0px !important!
              }
              .tab-content {
                padding-top: 0px !important;
@@ -233,10 +234,10 @@ ui <- fluidPage(
           # Add a main panel for displaying the bridge list
           mainPanel(
             style = "margin-left: 0px; padding: 20px;",
-            div(htmlOutput("sec2pri_metadata")),
+            div(htmlOutput("sec2pri_metadata"), style = "margin-left: 10px;"),
             div(plotOutput("sec2pri_piechart_results", height = "200px"), class = "my-plot"),
-            # actionButton("copyPrimaryID", "Copy"),
-            div(DTOutput("sec2pri_mapping_results"), style = "margin-top: -100px;")
+            uiOutput("copyButtonUI"),
+            div(DTOutput("sec2pri_mapping_results"), style = "margin-top: 50px; margin-left: 10px;")
           )
         )
       )
@@ -367,12 +368,13 @@ server <- function(input, output, session) {
   #sec2pri tab
   # Define the input options based on identifier or symbol/name
   observe({
+    sec2pri_mapping$sec2pri_table <- NULL
     if(input$type == "identifierType") { 
       output$dataSource <- renderUI({
         selectInput(
           inputId = 'sec2priDataSource', 
-          label = HTML(paste("Choose the data source&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='", tooltips$description[tooltips$tooltip == "Data source"], "'></i> :")),
-          # label = 'Choose the data source:',
+          label = HTML(paste("Choose the datasource&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='", tooltips$description[tooltips$tooltip == "Data source"], "'></i> :")),
+          # label = 'Choose the datasource:',
           choices = c("ChEBI", "HMDB", "Wikidata metabolites", "Wikidata genes/proteins", "HGNC Accession number", "NCBI", "UniProt"),
           selected = "ChEBI" 
           )
@@ -381,7 +383,7 @@ server <- function(input, output, session) {
       output$dataSource <- renderUI({
         selectInput(
           inputId = 'sec2priDataSource', 
-          label = HTML(paste("Choose the data source&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='", tooltips$description[tooltips$tooltip == "Data source"], "'></i> :")),
+          label = HTML(paste("Choose the datasource&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='", tooltips$description[tooltips$tooltip == "Data source"], "'></i> :")),
           choices = c("Metabolite synonym2name", "ChEBI synonym2name", "HMDB synonym2name", "Wikidata synonym2name",
                       "Gene alias2symbol", "HGNC alias2symbol", "NCBI alias2symbol"),
           selected = "ChEBI synonym2name" 
@@ -426,6 +428,7 @@ server <- function(input, output, session) {
   # Function to make a vector for input identifiers
   secIdentifiersList <- reactive({
     output$sec2pri_metadata <- NULL
+    
     if(!is.null(sec2pri_input_file())){
       print("Reading identifiers from file...")
       input_ids <- readLines(sec2pri_input_file()$datapath)
@@ -544,7 +547,7 @@ server <- function(input, output, session) {
   
   # Function to make the output table
   sec2pri_output <- reactive({
-    req(input$sec2priDataSource)
+    req(input$sec2priDataSource, input$sec2pri_get)
     if(!is.null(input$sec2pri_identifiers_file) | !is.null(input$sec2pri_identifiers)) {
       dataset <- read_data_all()
       if(grepl("alias2symbol", input$sec2priDataSource)){
@@ -626,6 +629,7 @@ server <- function(input, output, session) {
     if(nrow(sec2pri_output()) != 0) {
       sec2pri_mapping$sec2pri_table <- req(
         DT::datatable(sec2pri_output(), 
+                      # escape = FALSE,
                       # callback = JS("$('div.button').append($('#copyPrimaryID'));"), 
                       options = list(orderClasses = TRUE,
                                      lengthMenu = c(10, 25, 50, 100),
@@ -663,14 +667,40 @@ server <- function(input, output, session) {
       }
     })
   
-  #  PriIDList <- reactive({
-  #   if (nrow(sec2pri_output()) != 0) {
-  #     
-  #   }
-  # })
+   PriIDList <- reactive({
+    if (nrow(sec2pri_output()) != 0) {
+      dataset <- read_data_all()
+      priID_list <- read_data_primary()
+      primaryIDs <- as.character(intersect(unique(secIdentifiersList()), priID_list))
+      primary_id <- unique(c(sec2pri_output()$`primary ID`, primaryIDs))
+      return(primary_id)
+    }
+  })
   
-  # output$copyPrimaryID <- PriIDList()
+   # Create a reactiveVal to track user selection
+   user_selection <- reactiveVal("")
+   
+   # Update user_selection when the "Get Data" button is clicked
+   observeEvent(input$sec2pri_get, {
+     user_selection("sec2pri_get")
+   })
+   
+   # Conditionally render the "Copy Primary IDs" button
+   output$copyButtonUI <- renderUI({
+     if (!is.null(sec2pri_mapping$sec2pri_table) & user_selection() == "sec2pri_get") {
+       actionButton("copyPrimaryID", "Copy primary IDs to IDMapper", style = "color: #96b77d; background-color:#EEEEEE; border-color: #96b77d; float: right;")
+     } 
+   })
+   
+
+   # Copy all PrimaryID values to the text area when the button is clicked
+   observeEvent(input$copyPrimaryID, {
+    primary_id_text = PriIDList()
+    primary_id_text <- paste(primary_id_text, collapse = "\n")
+    updateTextAreaInput(session, "BridgeDb_identifiers", value = primary_id_text)
       
+  })
+  
   # Define output format
   output$downloadFormatUI <- renderUI({
     dataSource <- input$sec2priDataSource
@@ -921,9 +951,11 @@ server <- function(input, output, session) {
   #BridgeDb tab
   # Handle clearing of BridgeDb_identifiers
   observeEvent(c(input$type_BridgeDb, input$inputDataSource), {
-    updateTextAreaInput(session,
+    if(is.null(PriIDList())){
+      updateTextAreaInput(session,
                         inputId = 'BridgeDb_identifiers',
                         value = '')  # Clear the text area
+    }
   })
   
   ##Define the input options based
