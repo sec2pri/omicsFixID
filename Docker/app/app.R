@@ -672,6 +672,12 @@ server <- function(input, output, session) {
       dataset <- read_data_all()
       priID_list <- read_data_primary()
       primaryIDs <- as.character(intersect(unique(secIdentifiersList()), priID_list))
+      if("name" %in% colnames(dataset)){
+        primaryIDs <- dataset$primaryID[dataset$name %in% primaryIDs]
+      } else {
+        primaryIDs <- dataset$primaryID[dataset$primarySymbol %in% primaryIDs]
+        
+      }
       primary_id <- unique(c(sec2pri_output()$`primary ID`, primaryIDs))
       return(primary_id)
     }
