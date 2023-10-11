@@ -10,7 +10,9 @@ id_type <- function(type) {
     output_dataSource <- 
       selectInput(
         inputId = "sec2priDataSource", 
-        label = HTML(paste("Choose the datasource&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='", tooltips$description[tooltips$tooltip == "Data source"], "'></i> :")),
+        label = HTML(
+          paste("Choose the datasource&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='", 
+                tooltips$description[tooltips$tooltip == "Data source"], "'></i> :")),
         choices = c("ChEBI", "HMDB", "Wikidata metabolites", "Wikidata genes/proteins", "HGNC Accession number", "NCBI", "UniProt"),
         selected = "ChEBI" 
       )
@@ -18,7 +20,9 @@ id_type <- function(type) {
     output_dataSource <- 
       selectInput(
         inputId = "sec2priDataSource", 
-        label = HTML(paste("Choose the datasource&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='", tooltips$description[tooltips$tooltip == "Data source"], "'></i> :")),
+        label = HTML(
+          paste("Choose the datasource&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='",
+                tooltips$description[tooltips$tooltip == "Data source"], "'></i> :")),
         choices = c("Metabolite synonym2name", "ChEBI synonym2name", "HMDB synonym2name", "Wikidata synonym2name",
                     "Gene alias2symbol", "HGNC alias2symbol", "NCBI alias2symbol"),
         selected = "ChEBI synonym2name" 
@@ -29,52 +33,24 @@ id_type <- function(type) {
 
 # Define a function to define the area text value
 text_value <- function(sec2priDataSource) {
-  text = ifelse(sec2priDataSource == "HGNC alias2symbol", "HOXA11\nHOX12\nCD31", 
-           ifelse(sec2priDataSource == "HGNC Accession number","HGNC:24\nHGNC:32\nHGNC:13349\nHGNC:7287\n",
-                  ifelse(sec2priDataSource == "HMDB","HMDB0000005\nHMDB0004990\nHMDB60172\nHMDB00016",
-                         ifelse(sec2priDataSource == "HMDB synonym2name","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\nPi-methylhistidine\nCS2\nrenzapride",
-                                ifelse(sec2priDataSource == "ChEBI", "CHEBI:20245\nCHEBI:136845\nCHEBI:656608\nCHEBI:4932",
-                                       ifelse(sec2priDataSource == "Wikidata metabolites","Q422964\nQ25500867\nQ16634192",
-                                              ifelse(sec2priDataSource == "Wikidata genes/proteins","Q21118320\nQ21119955\nQ21122914",
-                                                     ifelse(sec2priDataSource == "Wikidata synonym2name","antifade\nCS2\n",
-                                                            ifelse(sec2priDataSource == "ChEBI synonym2name","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\n2-Hydroxybutanoic acid",
-                                                                   ifelse(sec2priDataSource == "UniProt","A0A011PKA5\nA0A016SR66\nP9WES5",
-                                                                          ifelse(sec2priDataSource == "Metabolite synonym2name","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\nPi-methylhistidine\nCS2\nrenzapride",
-                                                                                 ifelse(sec2priDataSource == "NCBI","61\n76\n79839\n99",
-                                                                                        ifelse(sec2priDataSource == "NCBI alias2symbol","S863-7\nNAT1\nEIEE29",
-                                                                                               ifelse(sec2priDataSource == "Gene alias2symbol","S863-7\nNAT1\nEIEE29\nHOXA11\nHOX12\nCD31",
-                                                                                                      ""))))))))))))))
+  text = 
+    ifelse(
+      sec2priDataSource == "HGNC alias2symbol", "HOXA11\nHOX12\nCD31", 
+      ifelse(sec2priDataSource == "HGNC Accession number","HGNC:24\nHGNC:32\nHGNC:13349\nHGNC:7287\n",
+             ifelse(sec2priDataSource == "HMDB","HMDB0000005\nHMDB0004990\nHMDB60172\nHMDB00016",
+                    ifelse(sec2priDataSource == "HMDB synonym2name","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\nPi-methylhistidine\nCS2\nrenzapride",
+                          ifelse(sec2priDataSource == "ChEBI", "CHEBI:20245\nCHEBI:136845\nCHEBI:656608\nCHEBI:4932",
+                                 ifelse(sec2priDataSource == "Wikidata metabolites","Q422964\nQ25500867\nQ16634192",
+                                        ifelse(sec2priDataSource == "Wikidata genes/proteins","Q21118320\nQ21119955\nQ21122914",
+                                               ifelse(sec2priDataSource == "Wikidata synonym2name","antifade\nCS2\n",
+                                                      ifelse(sec2priDataSource == "ChEBI synonym2name","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\n2-Hydroxybutanoic acid",
+                                                             ifelse(sec2priDataSource == "UniProt","A0A011PKA5\nA0A016SR66\nP9WES5",
+                                                                    ifelse(sec2priDataSource == "Metabolite synonym2name","(+)-2-fenchanone\n2-Acyl-1-alkyl-sn-glycerol\nPi-methylhistidine\nCS2\nrenzapride",
+                                                                           ifelse(sec2priDataSource == "NCBI","61\n76\n79839\n99",
+                                                                                  ifelse(sec2priDataSource == "NCBI alias2symbol","S863-7\nNAT1\nEIEE29",
+                                                                                         ifelse(sec2priDataSource == "Gene alias2symbol","S863-7\nNAT1\nEIEE29\nHOXA11\nHOX12\nCD31",
+                                                                                                ""))))))))))))))
   return(text)
-}
-
-# Define a function to create identifire list
-create_id_list <- function(inputFile, inputText, type) {
-  if(!is.null(inputFile)){
-    print("Reading identifiers from file...")
-    input_ids <- readLines(inputFile)
-    # Remove empty or whitespace-only last line
-    last_line <- input_ids[length(input_ids)]
-    if(nchar(trimws(last_line)) == 0){
-      input_ids <- input_ids[-length(input_ids)]
-    }
-    # Split identifiers on newline, comma, or space
-    input_ids <- unlist(strsplit(input_ids, 
-                                 ifelse(
-                                   type == "identifierType", '\\"|\n|\t|,|\\s+', '\n|\t'), 
-                                 perl = TRUE))
-    # Remove empty strings and return the list of identifiers
-    input_ids <- input_ids[input_ids != ""]
-  } else if(!is.null(inputText)){
-    # Split identifiers entered in text area by newline, comma, or space
-    input_ids <- as.character(inputText)
-    input_ids <- unlist(strsplit(input_ids, 
-                                  ifelse(
-                                    type == "identifierType", '\n|, |\\s+','\n'),
-                                  perl = TRUE))
-    # Remove empty strings and return the list of identifiers
-    input_ids <- input_ids[input_ids != ""]
-  }
-  return(as.character(input_ids))
 }
 
 # Define a function to read input dataset
@@ -113,6 +89,36 @@ read_input <- function(sec2priDataSource) {
   return(dataset)
 }
 
+# Define a function to create identifier list
+create_id_list <- function(inputFile, inputText, type) {
+  if(!is.null(inputFile)){
+    print("Reading identifiers from file...")
+    input_ids <- readLines(inputFile)
+    # Remove empty or white space-only last line
+    last_line <- input_ids[length(input_ids)]
+    if(nchar(trimws(last_line)) == 0){
+      input_ids <- input_ids[-length(input_ids)]
+    }
+    # Split identifiers on newline, comma, or space
+    input_ids <- unlist(strsplit(input_ids, 
+                                 ifelse(
+                                   type == "identifierType", '\\"|\n|\t|,|\\s+', '\n|\t'), 
+                                 perl = TRUE))
+    # Remove empty strings and return the list of identifiers
+    input_ids <- input_ids[input_ids != ""]
+  } else if(!is.null(inputText)){
+    # Split identifiers entered in text area by newline, comma, or space
+    input_ids <- as.character(inputText)
+    input_ids <- unlist(strsplit(input_ids, 
+                                 ifelse(
+                                   type == "identifierType", '\n|, |\\s+','\n'),
+                                 perl = TRUE))
+    # Remove empty strings and return the list of identifiers
+    input_ids <- input_ids[input_ids != ""]
+  }
+  return(as.character(input_ids))
+}
+
 # Define a function to read primary IDs
 read_primary_input <- function(sec2priDataSource) {
   if(sec2priDataSource == "HGNC Accession number"){
@@ -147,48 +153,107 @@ read_primary_input <- function(sec2priDataSource) {
   return(priID_list)
 }
 
+# Define a list of primary identifiers
+get_primary_ids <- function(type, inputIdentifierList, priID_list) {
+  primaryIDs <- as.character(
+    intersect(
+      unique(inputIdentifierList),
+      priID_list)
+    )
+  return(primaryIDs)
+}
+
+# Define a list of secondary identifiers
+get_secondary_ids <- function(type, inputIdentifierList, mapping_table) {
+  secondaryIDs <- as.character(
+    intersect(
+      unique(inputIdentifierList),
+      unique(mapping_table[[grep(
+        ifelse(type == "identifierType", 
+               "secondaryID", "secondarySymbol|synonym"),
+        colnames(mapping_table), value = TRUE)]]))
+    )
+  return(secondaryIDs)
+}
+
+# Define a list of unknown identifiers
+get_unknown_ids <- function(type, inputIdentifierList, priID_list, mapping_table) {
+  primaryIDs <- get_primary_ids(type, inputIdentifierList, priID_list)
+  secondaryIDs <- get_secondary_ids(type, inputIdentifierList, mapping_table)
+  unknownIDs <- setdiff(setdiff(
+    unique(inputIdentifierList), 
+    primaryIDs),
+    secondaryIDs)
+  return(unknownIDs)
+}
+
+# Define a list of both secondary and primary identifiers
+get_sec_pri_ids <- function(type, inputIdentifierList, priID_list, mapping_table) {
+  primaryIDs <- get_primary_ids(type, inputIdentifierList, priID_list)
+  secondaryIDs <- get_secondary_ids(type, inputIdentifierList, mapping_table)
+  secPriIDs <- intersect(primaryIDs, secondaryIDs)
+  return(secPriIDs)
+}
+
 # Define a function to count the input primary and secondary ids
-count_id_group <- function(inputIdentifierList, priID_list, dataset, type) {
-  noInput <- length(unique(inputIdentifierList))
-  pri <- intersect(unique(inputIdentifierList), priID_list)
-  sec <- intersect(unique(inputIdentifierList), 
-                   unique(dataset[[grep(ifelse(
-                     type == "identifierType", "secondaryID", "secondarySymbol|synonym"),
-                     colnames(dataset), value = TRUE)]]))
-  pri_sec <- intersect(pri, sec)
-  noUnknown <- length(setdiff(setdiff(unique(inputIdentifierList), pri), sec))
-  proportion_table = data.frame(
-    type = c("#input IDs", "#pri_sec", "#primary", "#secondary", "#unknown"),
-    no = c(noInput, length(pri_sec), length(pri), length(sec), noUnknown)
+count_id_group <- function(type, inputIdentifierList, priID_list, mapping_table) {
+  primaryIDs <- get_primary_ids(type, inputIdentifierList, priID_list)
+  secondaryIDs <- get_secondary_ids(type, inputIdentifierList, mapping_table)
+  secPriIDs <- get_sec_pri_ids(type, inputIdentifierList, priID_list, mapping_table)
+  unknownIDs <- get_unknown_ids(type, inputIdentifierList, priID_list, mapping_table)
+  
+  freq_table = data.frame(
+    type = c(
+      "#input IDs",
+      "#pri_sec",
+      "#primary",
+      "#secondary",
+      "#unknown"),
+    no = c(
+      length(unique(inputIdentifierList)),
+      length(secPriIDs),
+      length(primaryIDs),
+      length(secondaryIDs),
+      length(unknownIDs))
   )
-  return(proportion_table)
+  return(freq_table)
 }
 
 # Define a function to create the output table
-create_output_table <- function(sec2priDataSource, inputIdentifierList, dataset) {
+create_output_table <- function(sec2priDataSource, inputIdentifierList, mapping_table) {
   if(grepl("alias2symbol", sec2priDataSource)){
-    sec2pri_table_output <- dataset %>% 
-      dplyr::filter(secondarySymbol %in% c(inputIdentifierList)) %>%
-      dplyr::select(secondarySymbol, primarySymbol, primaryID, comment) %>%
-      dplyr::rename(`input (secondary)` = secondarySymbol, 
-                    `primary symbol` = primarySymbol, 
-                    `primary ID` = primaryID) %>%
+    sec2pri_table_output <- mapping_table %>% 
+      dplyr::filter(
+        secondarySymbol %in% c(inputIdentifierList)) %>%
+      dplyr::select(
+        secondarySymbol, primarySymbol, primaryID, comment) %>%
+      dplyr::rename(
+        `input (secondary)` = secondarySymbol, 
+        `primary symbol` = primarySymbol, 
+        `primary ID` = primaryID) %>%
       dplyr::arrange(`input (secondary)`, `primary ID`)
-  } else if (grepl("synonym2name", sec2priDataSource)){
-    sec2pri_table_output <- dataset %>% 
-      dplyr::filter(synonym %in% c(inputIdentifierList)) %>%
-      dplyr::select(synonym, name, primaryID) %>%
-      dplyr::rename(`input (secondary)` = synonym,
-                    `primary ID` = primaryID) %>%
-      dplyr::arrange(`input (secondary)`, `primary ID`)
+  } else if(grepl("synonym2name", sec2priDataSource)){
+    sec2pri_table_output <- mapping_table %>% 
+      dplyr::filter(
+        synonym %in% c(inputIdentifierList)) %>%
+      dplyr::select(
+        synonym, name, primaryID) %>%
+      dplyr::rename(
+        `input (secondary)` = synonym,
+        `primary ID` = primaryID) %>%
+      dplyr::arrange(
+        `input (secondary)`, `primary ID`)
   } else {
-    sec2pri_table_output <- dataset %>% 
+    sec2pri_table_output <- mapping_table %>% 
       dplyr::filter(secondaryID %in% c(inputIdentifierList)) %>%
       dplyr::select(secondaryID, primaryID) %>%
-      dplyr::rename(`input (secondary)` = secondaryID,
-                    `primary ID` = primaryID) %>%
-      dplyr::mutate(`input (secondary)` = as.character(`input (secondary)`)) %>%
-      dplyr::arrange(`input (secondary)`, `primary ID`)
+      dplyr::rename(
+        `input (secondary)` = secondaryID,
+        `primary ID` = primaryID) %>%
+      dplyr::mutate(
+        `input (secondary)` = as.character(`input (secondary)`)) %>%
+      dplyr::arrange(
+        `input (secondary)`, `primary ID`)
   }
   return(sec2pri_table_output)
 }
@@ -202,9 +267,9 @@ create_metadata <- function(sec2priDataSource) {
                           paste0("<a href='", sourceVersion$website, "' target='_blank'>", gsub(" .*", "", sec2priDataSource) ," database</a>"), 
                           ifelse(is.na(sourceVersion$version), ".", paste0(" (version: ", sourceVersion$version, ").")))
   
-  if (sec2priDataSource == "Metabolite synonym2name"){
+  if(sec2priDataSource == "Metabolite synonym2name"){
     sec2pri_metadata <- renderText(HTML("Data is available from <b>HMDB</b>, <b>ChEBI</b>, and <b>Wikidata</b>."))
-  } else if (sec2priDataSource == "Gene alias2symbol"){
+  } else if(sec2priDataSource == "Gene alias2symbol"){
     sec2pri_metadata <- renderText(HTML("Data is available from <b>HGNC</b> and <b>NCBI</b>."))
   } else {
     sec2pri_metadata <- renderText(HTML(sourceVersion))
@@ -213,11 +278,11 @@ create_metadata <- function(sec2priDataSource) {
 }
 
 # Define a function for the bar chart
-create_plot <- function(input, IDtype){
+create_plot <- function(freq_table, IDtype){
   color_palette <- c(`#unknown` = "lightgray",
                      `#primary` = "#96b77d",
                      `#secondary` = "#7da190")
-  color_palette <- color_palette[names(color_palette) %in% input$type]
+  color_palette <- color_palette[names(color_palette) %in% freq_table$type]
   row_order <- c(`#unknown` = 3,  `#primary` = 2, `#secondary` = 1)
   ## Plot theme
   plot_theme <- ggplot2::theme_minimal() +
@@ -232,7 +297,7 @@ create_plot <- function(input, IDtype){
       plot.title = ggplot2::element_text(size = 16, face = "bold")
     )
   ggplot2::ggplot(
-    input %>% 
+    freq_table %>% 
       dplyr::filter(!type %in% c("#input IDs", "#pri_sec"), no != 0) %>%
       dplyr::mutate(row_order = row_order[match(type, names(row_order))]),
     ggplot2::aes(x = reorder(type, row_order), y = no, fill = type)) +
@@ -240,14 +305,14 @@ create_plot <- function(input, IDtype){
     ggplot2::scale_fill_manual(values = color_palette) +
     ggplot2::coord_flip() +
     plot_theme + 
-    ggplot2::ggtitle(ifelse(is.na(input$no[1]), "",
-                            paste0(input$no[1], 
+    ggplot2::ggtitle(ifelse(is.na(freq_table$no[1]), "",
+                            paste0(freq_table$no[1], 
                                    ifelse(IDtype == "identifierType",
                                           " (unique) input identifiers", 
                                           " (unique) input symbols/names"), ":"))) +
-    ggplot2::labs(subtitle = ifelse(input$no[2] == 0, "",
-                                    paste0(input[2], " (unique) input", 
-                                           ifelse(input$no[2] == 1, " is ", "s are "), 
+    ggplot2::labs(subtitle = ifelse(freq_table$no[2] == 0, "",
+                                    paste0(freq_table[2], " (unique) input", 
+                                           ifelse(freq_table$no[2] == 1, " is ", "s are "), 
                                            "both primary and secondary."))) +
     ggplot2::geom_text(ggplot2::aes(y = no, label = no), size = 6,
                        position = ggplot2::position_stack(vjust = .5)) +
@@ -255,45 +320,48 @@ create_plot <- function(input, IDtype){
 }
 
 # Define a list of primary identifiers
-primary_id_list <- function(dataset, priID_list, inputIdentifierList, sec2pri_table) {
-  primaryIDs <- as.character(intersect(unique(inputIdentifierList), priID_list))
-  if("name" %in% colnames(dataset)){
-    primaryIDs <- dataset$primaryID[dataset$name %in% primaryIDs]
+primary_id_list <- function(type, inputIdentifierList, priID_list, mapping_table, sec2pri_table) {
+  primaryIDs <- get_primary_ids(type, inputIdentifierList, priID_list)
+  if("name" %in% colnames(mapping_table)){
+    primaryIDs <- mapping_table$primaryID[mapping_table$name %in% primaryIDs]
   } else {
-    primaryIDs <- dataset$primaryID[dataset$primarySymbol %in% primaryIDs]
-    
+    primaryIDs <- mapping_table$primaryID[mapping_table$primarySymbol %in% primaryIDs]
+
   }
   primary_id <- unique(c(sec2pri_table$`primary ID`, primaryIDs))
   return(primary_id)
 }
 
-# Define a list of secondary identifiers
+# Define a function to define output file name
+idrefiner_filename = function(sec2priDataSource, download_format) {
+  paste0("IDRefiner_mapping_", 
+         gsub(" ", "_", sec2priDataSource), ".", download_format)
+}
 
 # Define a function to create download table
-download_content = function(sec2pri_table, dataset,
-                   priID_list, inputIdentifierList,
-                   download_format, type, 
-                   sec2priDataSource, file) {
+download_content = function(inputIdentifierList, sec2priDataSource, type, mapping_table,
+                            priID_list, sec2pri_table, download_format) {
+  # sec2pri_table <- create_output_table(sec2priDataSource, inputIdentifierList, mapping_table) 
+  primaryIDs <- get_primary_ids(type, inputIdentifierList, priID_list)
+  secondaryIDs <- get_secondary_ids(type, inputIdentifierList, mapping_table)
+  secPriIDs <- get_sec_pri_ids(type, inputIdentifierList, priID_list, mapping_table)
+  unknownIDs <- get_unknown_ids(type, inputIdentifierList, priID_list, mapping_table)
+  
+  # filename = idrefiner_filename(sec2priDataSource, download_format)
+  
   if(!is.null(sec2pri_table)) {
-    primaryIDs <- as.character(intersect(unique(inputIdentifierList), priID_list))
-    unknownIDs <- as.character(
-      unique(inputIdentifierList)[!unique(inputIdentifierList) %in%
-                                    c(priID_list, 
-                                      dataset[[grep(ifelse(
-                                        type == "identifierType", 
-                                        "secondaryID", "secondarySymbol|synonym"), 
-                                        (dataset), value = TRUE)]])])
-    
     if(download_format %in% c("tsv", "csv")){
       if(length(primaryIDs) == 0){
         output <- sec2pri_table
-      } else if(length(primaryIDs) != 0){
+        } else if(length(primaryIDs) != 0){
         if(type == "identifierType"){
           output <- dplyr::bind_rows(
             sec2pri_table,
-            data.frame(`input (secondary)` = as.character(primaryIDs),
-                       `primary ID` = as.character(primaryIDs),
-                       comment = "The input is a primary ID.", check.names = FALSE))
+            data.frame(
+              `input (secondary)` = primaryIDs,
+              `primary ID` = primaryIDs,
+              comment = "The input is a primary ID.", 
+              check.names = FALSE))
         } else if(grep("alias2symbol", sec2priDataSource)){
           output <- dplyr::bind_rows(
             sec2pri_table,
@@ -321,8 +389,8 @@ download_content = function(sec2pri_table, dataset,
             comment = "The input is unknown.", check.names = FALSE))
       
       write.table(
-        output, file, row.names = FALSE, 
-        sep = ifelse (download_format == "csv", ",", "\t"),
+        output, file, row.names = FALSE,
+        sep = ifelse(download_format == "csv", ",", "\t"),
         quote = FALSE
       )
     } else if(download_format == "sssom.tsv"){
@@ -371,7 +439,7 @@ download_content = function(sec2pri_table, dataset,
             predicate_id = predicateID,
             object_id = primaryID, 
             object_label = primarySymbol,
-            mapping_cardinality = mapping_cardinality_sec2pri) 
+            mapping_cardinality = mapping_cardinality_sec2pri)
       } else if(grepl("alias2symbol", sec2priDataSource)){
         if(length(primaryIDs) == 0){
           output <- dataset %>% 
@@ -471,7 +539,7 @@ download_content = function(sec2pri_table, dataset,
                                 sourceVersion$date, ifelse(sourceVersion$type == "queried", ".", paste0(" (version: ", sourceVersion$version, ").")))
         dataset <- dataset %>% add_mapping_cardinality() %>% add_predicate()
         if(length(primaryIDs) == 0){
-          output <-  dataset %>% 
+          output <-  dataset %>.% 
             dplyr::filter(secondaryID %in% c(inputIdentifierList)) # input is secondary ID 
         } else {
           output <- dplyr::bind_rows(
@@ -530,7 +598,6 @@ download_content = function(sec2pri_table, dataset,
                                   ifelse(sourceVersion$type == "queried", " on ", " and downloaded on "), sourceVersion$date, ifelse(sourceVersion$type == "queried", ".", paste0(" (version: ", sourceVersion$version, ").")))
           output <- output %>% dplyr::mutate(source = sourceVersion) 
         }
-        
       }
       
       # Add unknown IDs
@@ -557,6 +624,7 @@ download_content = function(sec2pri_table, dataset,
     }
   }
 }
+
 # Define a function for BridgeDb mapping
 Xref_function <- function(identifiers, inputSpecies = "Human",
                           inputSystemCode = "HGNC", outputSystemCode = "All") {
@@ -583,7 +651,7 @@ Xref_function <- function(identifiers, inputSpecies = "Human",
     # Extracting the content in the raw text format
     out <- content(res, as="text")
     
-    if (jsonlite::validate(out)) { # check if JSON string is valid
+    if(jsonlite::validate(out)) { # check if JSON string is valid
       res <- rjson::fromJSON(json_str = out)
       # Convert to data frame
       df <- do.call(rbind, lapply(names(res), function(name) {
@@ -619,17 +687,19 @@ add_mapping_cardinality <- function(dataFile) {
     ungroup()
   # Add mapping_cardinality column
   dataFile <- dataFile %>%
-    mutate(mapping_cardinality = ifelse(count_secondaryID == 1 & count_primaryID == 1,
-                                        "1:1", ifelse(
-                                          count_secondaryID > 1 & count_primaryID == 1,
-                                          "1:n", ifelse(
-                                            count_secondaryID == 1 & count_primaryID > 1,
-                                            "n:1", ifelse(
-                                              count_secondaryID == 1 & count_primaryID == 0,
-                                              "1:0", ifelse(
-                                                count_secondaryID > 1 & count_primaryID > 1,
-                                                "n:n", NA
-                                              ))))))
+    mutate(mapping_cardinality = ifelse(
+      count_secondaryID == 1 & count_primaryID == 1,
+      "1:1", ifelse(
+        count_secondaryID > 1 & count_primaryID == 1,
+        "1:n", ifelse(
+          count_secondaryID == 1 & count_primaryID > 1,
+          "n:1", ifelse(
+            count_secondaryID == 1 & count_primaryID == 0,
+            "1:0", ifelse(
+              count_secondaryID > 1 & count_primaryID > 1,
+              "n:n", NA
+              ))))))
+  
   # Return the updated data
   return(select(dataFile, -c(count_primaryID, count_secondaryID)))
 }
@@ -638,11 +708,14 @@ add_mapping_cardinality <- function(dataFile) {
 add_predicate <- function(dataFile) {
   # Add mapping_cardinality column
   dataFile <- dataFile %>%
-    mutate(predicate_id = ifelse(mapping_cardinality %in% c("1:n", "n:n"), #the secondary ID that Split into multiple OR multiple secondary IDs merged/splited into multiple primary IDs
-                                 "oboInOwl:consider", ifelse(
-                                   mapping_cardinality %in% c("1:1", "n:1", "1:0"), #the secondary ID replace by new ID OR multiple secondary IDs merged into one primary ID
-                                   "IAO:0100001", NA
-                                 )))
+    mutate(
+      predicate_id = ifelse(
+        mapping_cardinality %in% c("1:n", "n:n"), #the secondary ID that Split into multiple OR multiple secondary IDs merged/splited into multiple primary IDs
+        "oboInOwl:consider", ifelse(
+          mapping_cardinality %in% c("1:1", "n:1", "1:0"), #the secondary ID replace by new ID OR multiple secondary IDs merged into one primary ID
+          "IAO:0100001", NA
+          )))
+  
   # Return the updated data
   return(dataFile)
 }
@@ -664,7 +737,7 @@ write_sssom_tsv <- function(input_data, output_file, source = "") {
   
   # Write the CURIE map as comments in the output file
   curie_comments <- paste0("# curie_map:\n")
-  for (curie in names(curie_map)) {
+  for(curie in names(curie_map)) {
     curie_comments <- paste0(curie_comments, "#   ", curie, " ", curie_map[[curie]], "\n")
   }
   if(source != "") curie_comments <- paste0(curie_comments, "# source: ", source, "\n")
