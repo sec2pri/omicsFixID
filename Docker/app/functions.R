@@ -56,37 +56,37 @@ text_value <- function(sec2priDataSource) {
 # Define a function to read input dataset
 read_input <- function(sec2priDataSource) {
   if(sec2priDataSource == "HGNC Accession number"){
-    dataset <- data.table::fread("processed_mapping_files/HGNC_secID2priID.tsv")
+    mapping_table <- data.table::fread("processed_mapping_files/HGNC_secID2priID.tsv")
   } else if(sec2priDataSource == "HGNC alias2symbol"){
-    dataset <- data.table::fread("processed_mapping_files/HGNC_alias&prev2symbol.tsv")
+    mapping_table <- data.table::fread("processed_mapping_files/HGNC_alias&prev2symbol.tsv")
   } else if(sec2priDataSource == "ChEBI synonym2name"){
-    dataset <- data.table::fread("processed_mapping_files/ChEBI_synonym2name.tsv")
+    mapping_table <- data.table::fread("processed_mapping_files/ChEBI_synonym2name.tsv")
   } else if(sec2priDataSource == "HMDB synonym2name"){
-    dataset <- data.table::fread("processed_mapping_files/HMDB_synonym2name.tsv")
+    mapping_table <- data.table::fread("processed_mapping_files/HMDB_synonym2name.tsv")
   } else if(sec2priDataSource == "Metabolite synonym2name"){
-    dataset <- dplyr::bind_rows(HMDB = data.table::fread("processed_mapping_files/HMDB_synonym2name.tsv"),
+    mapping_table <- dplyr::bind_rows(HMDB = data.table::fread("processed_mapping_files/HMDB_synonym2name.tsv"),
                                 ChEBI = data.table::fread("processed_mapping_files/ChEBI_synonym2name.tsv"), 
                                 Wikidata = data.table::fread("processed_mapping_files/Wikidata_metabolites_synonym2name.tsv"), .id = "sourceFile")
   } else if(sec2priDataSource == "Wikidata metabolites"){
-    dataset <- data.table::fread("processed_mapping_files/Wikidata_metabolites_secID2priID.tsv")
+    mapping_table <- data.table::fread("processed_mapping_files/Wikidata_metabolites_secID2priID.tsv")
   } else if(sec2priDataSource == "Wikidata genes/proteins"){
-    dataset <- data.table::fread("processed_mapping_files/Wikidata_geneProtein_secID2priID.tsv")
+    mapping_table <- data.table::fread("processed_mapping_files/Wikidata_geneProtein_secID2priID.tsv")
   } else if(sec2priDataSource == "Wikidata synonym2name"){
-    dataset <- data.table::fread("processed_mapping_files/Wikidata_metabolites_synonym2name.tsv")
+    mapping_table <- data.table::fread("processed_mapping_files/Wikidata_metabolites_synonym2name.tsv")
   } else if(sec2priDataSource == "Gene alias2symbol"){
-    dataset <- dplyr::bind_rows(HGNC = data.table::fread("processed_mapping_files/HGNC_alias&prev2symbol.tsv"),
+    mapping_table <- dplyr::bind_rows(HGNC = data.table::fread("processed_mapping_files/HGNC_alias&prev2symbol.tsv"),
                                 NCBI = data.table::fread("processed_mapping_files/NCBI_alias&prev2symbol.tsv") %>%
                                   dplyr::mutate(primaryID = as.character(primaryID)), .id = "sourceFile")
   } else if(sec2priDataSource == "NCBI alias2symbol"){
-    dataset <- data.table::fread("processed_mapping_files/NCBI_alias&prev2symbol.tsv") %>%
+    mapping_table <- data.table::fread("processed_mapping_files/NCBI_alias&prev2symbol.tsv") %>%
       dplyr::mutate(primaryID = as.character(primaryID))
   } else if(sec2priDataSource == "NCBI"){
-    dataset <- data.table::fread("processed_mapping_files/NCBI_secID2priID.tsv") %>%
+    mapping_table <- data.table::fread("processed_mapping_files/NCBI_secID2priID.tsv") %>%
       dplyr::mutate(primaryID = as.character(primaryID), secondaryID = as.character(secondaryID))
   } else {
-    dataset = data.table::fread(paste0("processed_mapping_files/", sec2priDataSource, "_secID2priID.tsv"))
+    mapping_table = data.table::fread(paste0("processed_mapping_files/", sec2priDataSource, "_secID2priID.tsv"))
   }
-  return(dataset)
+  return(mapping_table)
 }
 
 # Define a function to create identifier list
@@ -338,291 +338,418 @@ idrefiner_filename = function(sec2priDataSource, download_format) {
          gsub(" ", "_", sec2priDataSource), ".", download_format)
 }
 
-# Define a function to create download table
-download_content = function(inputIdentifierList, sec2priDataSource, type, mapping_table,
-                            priID_list, sec2pri_table, download_format) {
-  # sec2pri_table <- create_output_table(sec2priDataSource, inputIdentifierList, mapping_table) 
+# Define a function to create download table in tsv or csv format
+create_tsvORcsv_output <- function(type, inputIdentifierList, sec2priDataSource, priID_list, mapping_table, sec2pri_table) {
   primaryIDs <- get_primary_ids(type, inputIdentifierList, priID_list)
-  secondaryIDs <- get_secondary_ids(type, inputIdentifierList, mapping_table)
-  secPriIDs <- get_sec_pri_ids(type, inputIdentifierList, priID_list, mapping_table)
   unknownIDs <- get_unknown_ids(type, inputIdentifierList, priID_list, mapping_table)
+  secPriIDs <- get_sec_pri_ids(type, inputIdentifierList, priID_list, mapping_table)
   
-  # filename = idrefiner_filename(sec2priDataSource, download_format)
-  
-  if(!is.null(sec2pri_table)) {
-    if(download_format %in% c("tsv", "csv")){
-      if(length(primaryIDs) == 0){
-        output <- sec2pri_table
-        } else if(length(primaryIDs) != 0){
-        if(type == "identifierType"){
-          output <- dplyr::bind_rows(
-            sec2pri_table,
-            data.frame(
-              `input (secondary)` = primaryIDs,
-              `primary ID` = primaryIDs,
-              comment = "The input is a primary ID.", 
-              check.names = FALSE))
-        } else if(grep("alias2symbol", sec2priDataSource)){
-          output <- dplyr::bind_rows(
-            sec2pri_table,
-            data.frame(`input (secondary)` = primaryIDs, 
-                       `primary symbol` = primaryIDs, 
-                       comment = "The input is a primary gene symbol.", check.names = FALSE) %>%
-              mutate(`primary ID` = dataset$primaryID[match(`primary symbol`, dataset$primarySymbol)])
-          )
-        } else if(grep("synonym2name", sec2priDataSource)){
-          output <- dplyr::bind_rows(
-            sec2pri_table,
-            data.frame(`input (secondary)` = primaryIDs, 
-                       name = primaryIDs, 
-                       comment = "The input is a primary metabolite name.", check.names = FALSE) %>%
-              mutate(`primary ID` = dataset$primaryID[match(name, dataset$name)])
-          )
-        }
-      }
-      
-      # Add unknown IDs
-      if(length(unknownIDs) != 0)
-        output <- dplyr::bind_rows(
-          output, data.frame(
-            `input (secondary)` = unknownIDs, 
-            comment = "The input is unknown.", check.names = FALSE))
-      
-      write.table(
-        output, file, row.names = FALSE,
-        sep = ifelse(download_format == "csv", ",", "\t"),
-        quote = FALSE
+  if(length(primaryIDs) == 0){
+    output <- sec2pri_table
+  } else if(length(primaryIDs) != 0){
+    if(type == "identifierType"){
+      output <- dplyr::bind_rows(
+        sec2pri_table,
+        data.frame(
+          `input (secondary)` = primaryIDs,
+          `primary ID` = primaryIDs,
+          comment = "The input is a primary ID.", 
+          check.names = FALSE))
+
+    } else if(grep("alias2symbol", sec2priDataSource)){
+      output <- dplyr::bind_rows(
+        sec2pri_table,
+        data.frame(`input (secondary)` = primaryIDs, 
+                   `primary symbol` = primaryIDs, 
+                   comment = "The input is a primary gene symbol.", check.names = FALSE) %>%
+          mutate(`primary ID` = mapping_table$primaryID[match(`primary symbol`, mapping_table$primarySymbol)])
       )
-    } else if(download_format == "sssom.tsv"){
-      if(sec2priDataSource %in% c("HGNC Accession number", "NCBI")){
-        if(length(primaryIDs) == 0){
-          output <- dataset %>% 
-            dplyr::filter(secondaryID %in% c(inputIdentifierList)) %>% # input is secondary ID 
-            dplyr::select(
-              secondaryID,
-              secondarySymbol,
-              predicateID,
-              primaryID,
-              primarySymbol,
-              mapping_cardinality_sec2pri,
-              comment,
-              source)
-        } else {
-          output <- dplyr::bind_rows(
-            dataset %>% 
-              dplyr::filter(secondaryID %in% c(inputIdentifierList)) %>% # input is secondary ID 
-              dplyr::select(
-                secondaryID, 
-                secondarySymbol, 
-                predicateID, 
-                primaryID, 
-                primarySymbol, 
-                mapping_cardinality_sec2pri, 
-                comment, 
-                source) %>%
-              dplyr::mutate(secondaryID = as.character(secondaryID)),
-            dataset %>% 
-              dplyr::filter(primaryID %in% primaryIDs) %>% # input is primary ID 
-              dplyr::select(primaryID, primarySymbol, source) %>%
-              dplyr::mutate(
-                secondaryID = as.character(primaryID),
-                secondarySymbol = primarySymbol,
-                predicateID = "skos:exactMatch",
-                mapping_cardinality_sec2pri = NA,
-                comment = "The input is a primary ID.")
-          )
-        }
-        output <- output %>% 
-          dplyr::rename(
-            subject_id = secondaryID,
-            subject_label = secondarySymbol,
-            predicate_id = predicateID,
-            object_id = primaryID, 
-            object_label = primarySymbol,
-            mapping_cardinality = mapping_cardinality_sec2pri)
-      } else if(grepl("alias2symbol", sec2priDataSource)){
-        if(length(primaryIDs) == 0){
-          output <- dataset %>% 
-            dplyr::filter(secondarySymbol %in% c(inputIdentifierList)) %>% # input is secondary ID 
-            dplyr::select(
-              secondarySymbol,
-              predicateID,
-              primaryID, 
-              primarySymbol,
-              mapping_cardinality_sec2pri,
-              comment,
-              source) %>%
-            dplyr::mutate(
-              secondaryID = NA,
-              primaryID = as.character(primaryID))
-        } else {
-          output <- dplyr::bind_rows(
-            dataset %>% 
-              dplyr::filter(secondarySymbol %in% c(inputIdentifierList)) %>% # input is secondary ID 
-              dplyr::select(
-                secondarySymbol, 
-                predicateID,
-                primaryID,
-                primarySymbol, 
-                mapping_cardinality_sec2pri, 
-                comment, 
-                source) %>%
-              dplyr::mutate(primaryID = as.character(primaryID)),
-            dataset %>% 
-              dplyr::filter(primarySymbol %in% primaryIDs) %>% # input is primary ID 
-              dplyr::select(
-                primaryID,
-                primarySymbol,
-                source) %>%
-              dplyr::mutate(
-                primaryID = as.character(primaryID),
-                secondaryID = primaryID,
-                secondarySymbol = primarySymbol,
-                predicateID = "skos:exactMatch",
-                mapping_cardinality_sec2pri = NA,
-                comment = "The input is a primary ID.")
-          ) 
-        }
-        output <- output %>%
-          dplyr::rename(
-            subject_id = secondaryID,
-            subject_label = secondarySymbol, 
-            predicate_id = predicateID,
-            object_id = primaryID, 
-            object_label = primarySymbol, 
-            mapping_cardinality = mapping_cardinality_sec2pri) 
-      } else if(sec2priDataSource == "UniProt"){
-        if(length(primaryIDs) == 0){
-          output <- dataset %>% 
-            dplyr::filter(secondaryID %in% c(inputIdentifierList)) %>% # input is secondary ID 
-            dplyr::select(
-              secondaryID, 
-              predicateID, 
-              primaryID, 
-              mapping_cardinality_sec2pri, 
-              comment, 
-              source)
-        } else {
-          output <- dplyr::bind_rows(
-            dataset %>% 
-              dplyr::filter(secondaryID %in% c(inputIdentifierList)) %>% # input is secondary ID 
-              dplyr::select(
-                secondaryID,
-                predicateID, 
-                primaryID, 
-                mapping_cardinality_sec2pri, 
-                comment,
-                source),
-            dataset %>% 
-              dplyr::filter(primaryID %in% primaryIDs) %>% # input is primary ID 
-              dplyr::select(primaryID, source) %>%
-              dplyr::mutate(
-                secondaryID = primaryID,
-                predicateID = "skos:exactMatch",
-                mapping_cardinality_sec2pri = NA,
-                comment = "The input is a primary ID.")
-          )}
-        output <- output %>%
-          dplyr::rename(
-            subject_id = secondaryID, 
-            predicate_id = predicateID, 
-            object_id = primaryID, 
-            mapping_cardinality = mapping_cardinality_sec2pri) 
-      } else if(sec2priDataSource %in% 
-                c("ChEBI", "HMDB", "Wikidata genes/proteins", "Wikidata metabolites")){
-        sourceVersion <- read.table("processed_mapping_files/dataSourceVersion.tsv", sep = "\t", header = TRUE, as.is = TRUE)
-        sourceVersion <- sourceVersion[match(
-          gsub(" .*", "", sec2priDataSource), 
-          sourceVersion$datasource),]
-        sourceVersion <- paste0("The data was ", sourceVersion$type, ifelse(sourceVersion$type == "queried", " from ", " on "), sourceVersion$website, 
-                                ifelse(sourceVersion$type == "queried", " on ", " and downloaded on "), 
-                                sourceVersion$date, ifelse(sourceVersion$type == "queried", ".", paste0(" (version: ", sourceVersion$version, ").")))
-        dataset <- dataset %>% add_mapping_cardinality() %>% add_predicate()
-        if(length(primaryIDs) == 0){
-          output <-  dataset %>.% 
-            dplyr::filter(secondaryID %in% c(inputIdentifierList)) # input is secondary ID 
-        } else {
-          output <- dplyr::bind_rows(
-            dataset %>% 
-              dplyr::filter(secondaryID %in% c(inputIdentifierList)), # input is secondary ID
-            dataset %>% 
-              dplyr::filter(primaryID %in% primaryIDs) %>% # input is primary ID 
-              dplyr::select(primaryID) %>%
-              dplyr::mutate(
-                secondaryID = primaryID,
-                predicate_id = "skos:exactMatch",
-                mapping_cardinality = NA,
-                comment = "The input is a primary ID.")
-          )}
-        output <- output %>% dplyr::rename(subject_id = secondaryID, object_id = primaryID)
-        
-      } else if(grepl("synonym2name", sec2priDataSource)){
-        sourceVersion <- read.table("processed_mapping_files/dataSourceVersion.tsv", sep = "\t", header = TRUE)
-        if(grepl("HMDB|ChEBI|Wikidata", sec2priDataSource)){
-          sourceVersion <- sourceVersion[match(gsub(" .*", "", sec2priDataSource), sourceVersion$datasource),]
-          sourceVersion <- paste0("The data was ", sourceVersion$type, ifelse(sourceVersion$type == "queried", " from ", " on "), sourceVersion$website, 
-                                  ifelse(sourceVersion$type == "queried", " on ", " and downloaded on "), sourceVersion$date, ifelse(sourceVersion$type == "queried", ".", paste0(" (version: ", sourceVersion$version, ").")))
-        }
-        
-        if(length(primaryIDs) == 0){
-          output <-  dataset %>% 
-            dplyr::filter(synonym %in% c(inputIdentifierList)) %>% # input is secondary ID 
-            dplyr::mutate(
-              secondaryID = NA,
-              predicate_id = NA,
-              mapping_cardinality = NA)
-          
-        } else {
-          output <- dplyr::bind_rows(
-            dataset %>% 
-              dplyr::filter(synonym %in% c(inputIdentifierList)), # input is secondary ID
-            dataset %>% 
-              dplyr::filter(name %in% primaryIDs) %>% # input is primary ID 
-              dplyr::select(primaryID, name, sourceFile) %>%
-              dplyr::mutate(
-                secondaryID = primaryID,
-                synonym = name,
-                predicate_id = NA,
-                mapping_cardinality = NA,
-                comment = "The input is a metabolite name.")
-          )}
-        output <- output %>% dplyr::rename(
-          subject_id = secondaryID, 
-          subject_label = synonym, 
-          object_id = primaryID, 
-          object_label = name)
-        
-        if(sec2priDataSource == "Metabolite synonym2name"){
-          sourceVersion <- sourceVersion[match(sourceFile, sourceVersion$datasource),]
-          sourceVersion <- paste0("The data was ", sourceVersion$type, ifelse(sourceVersion$type == "queried", " from ", " on "), sourceVersion$website, 
-                                  ifelse(sourceVersion$type == "queried", " on ", " and downloaded on "), sourceVersion$date, ifelse(sourceVersion$type == "queried", ".", paste0(" (version: ", sourceVersion$version, ").")))
-          output <- output %>% dplyr::mutate(source = sourceVersion) 
-        }
-      }
-      
-      # Add unknown IDs
-      if(length(unknownIDs) != 0){
-        unknownData <- data.frame(
-          subject = unknownIDs,
-          comment = "The input is unknown.", check.names = FALSE)
-        colnames(unknownData)[1] = ifelse(grepl("synonym2name|alias2symbol", sec2priDataSource), "subject_label", "subject_id")
-        output <- dplyr::bind_rows(output, unknownData) 
-      }
-      
-      output <- output %>%
-        dplyr::select(dplyr::one_of(
-          c("subject_id",
-            "subject_label",
-            "predicate_id",
-            "object_id",
-            "object_label",
-            "mapping_cardinality",
-            "comment",
-            "source"))) %>%
-        unique()
-      write_sssom_tsv(output, file, source = ifelse(grepl("HMDB|ChEBI|Wikidata", sec2priDataSource), sourceVersion, ""))
+    } else if(grep("synonym2name", sec2priDataSource)){
+      output <- dplyr::bind_rows(
+        sec2pri_table,
+        data.frame(`input (secondary)` = primaryIDs, 
+                   name = primaryIDs, 
+                   comment = "The input is a primary metabolite name.", check.names = FALSE) %>%
+          mutate(`primary ID` = mapping_table$primaryID[match(name, mapping_table$name)])
+      )
     }
   }
+  
+  # Add unknown IDs
+  if(length(unknownIDs) != 0)
+    output <- dplyr::bind_rows(
+      output, data.frame(
+        `input (secondary)` = unknownIDs, 
+        comment = "The input is unknown.", check.names = FALSE))
+  
+  # Add a comment for ambiguous IDs (secPriIDs)
+  if(length(secPriIDs) != 0){
+    output <- output %>%
+      mutate(
+        comment = ifelse(
+          `input (secondary)` %in% secPriIDs, 
+          paste0(
+            "NOTE: The input is ambiguous, meaning that based on the database it has been used as both a secondary and a primary name or symbol. ",
+            comment),
+          comment
+          )
+      )
+  }
+  return(output)
+}
+
+# Define a function to get datasource version
+get_source_version <- function(sec2priDataSource){
+  if(sec2priDataSource %in% c("ChEBI", "HMDB", "Wikidata genes/proteins", "Wikidata metabolites")){
+    sourceVersion <- read.table("processed_mapping_files/dataSourceVersion.tsv", sep = "\t", header = TRUE, as.is = TRUE)
+    sourceVersion <- sourceVersion[match(
+      gsub(" .*", "", sec2priDataSource), 
+      sourceVersion$datasource),]
+    sourceVersion <- paste0(
+      "The data was ", 
+      sourceVersion$type,
+      ifelse(
+        sourceVersion$type == "queried", " from ", " on "),
+      sourceVersion$website,
+      ifelse(sourceVersion$type == "queried", " on ", " and downloaded on "), 
+      sourceVersion$date, 
+      ifelse(sourceVersion$type == "queried", ".", paste0(" (version: ", sourceVersion$version, ")."))
+    )
+  }
+  if(grepl("synonym2name", sec2priDataSource) && sec2priDataSource != "Metabolite synonym2name"){
+    sourceVersion <- read.table("processed_mapping_files/dataSourceVersion.tsv", sep = "\t", header = TRUE)
+    if(grepl("HMDB|ChEBI|Wikidata", sec2priDataSource)){
+      sourceVersion <- sourceVersion[match(gsub(" .*", "", sec2priDataSource), sourceVersion$datasource),]
+      sourceVersion <- paste0(
+        "The data was ", 
+        sourceVersion$type, 
+        ifelse(sourceVersion$type == "queried", " from ", " on "), 
+        sourceVersion$website, 
+        ifelse(sourceVersion$type == "queried", " on ", " and downloaded on "),
+        sourceVersion$date, 
+        ifelse(sourceVersion$type == "queried", ".", paste0(" (version: ", sourceVersion$version, ")."))
+      )
+    }
+  }
+  if(sec2priDataSource == "Metabolite synonym2name"){
+    sourceVersion <- sourceVersion[match(sourceFile, sourceVersion$datasource),]
+    sourceVersion <- paste0(
+      "The data was ", 
+      sourceVersion$type, 
+      ifelse(sourceVersion$type == "queried", " from ", " on "), 
+      sourceVersion$website, 
+      ifelse(sourceVersion$type == "queried", " on ", " and downloaded on "), 
+      sourceVersion$date, 
+      ifelse(sourceVersion$type == "queried", ".", paste0(" (version: ", sourceVersion$version, ")."))
+    )
+  }
+  if(exists("sourceVersion")) return(sourceVersion)
+}
+
+# Define a function for adding mapping cardinality
+add_mapping_cardinality <- function(dataFile) {
+  # Calculate counts
+  dataFile <- dataFile %>%
+    group_by(primaryID) %>% 
+    mutate(count_primaryID = n(),
+           count_primaryID = ifelse(primaryID == "Entry Withdrawn", 0, count_primaryID)) %>%
+    group_by(secondaryID) %>% 
+    mutate(count_secondaryID = n()) %>%
+    ungroup()
+  # Add mapping_cardinality column
+  dataFile <- dataFile %>%
+    mutate(mapping_cardinality = ifelse(
+      count_secondaryID == 1 & count_primaryID == 1,
+      "1:1", ifelse(
+        count_secondaryID > 1 & count_primaryID == 1,
+        "1:n", ifelse(
+          count_secondaryID == 1 & count_primaryID > 1,
+          "n:1", ifelse(
+            count_secondaryID == 1 & count_primaryID == 0,
+            "1:0", ifelse(
+              count_secondaryID > 1 & count_primaryID > 1,
+              "n:n", NA
+            ))))))
+  
+  # Return the updated data
+  return(select(dataFile, -c(count_primaryID, count_secondaryID)))
+}
+
+# Define a function for adding mapping predicate
+add_predicate <- function(dataFile) {
+  # Add mapping_cardinality column
+  dataFile <- dataFile %>%
+    mutate(
+      predicate_id = ifelse(
+        mapping_cardinality %in% c("1:n", "n:n"), #the secondary ID that Split into multiple OR multiple secondary IDs merged/splited into multiple primary IDs
+        "oboInOwl:consider", ifelse(
+          mapping_cardinality %in% c("1:1", "n:1", "1:0"), #the secondary ID replace by new ID OR multiple secondary IDs merged into one primary ID
+          "IAO:0100001", NA
+        )))
+  
+  # Return the updated data
+  return(dataFile)
+}
+
+# Define a function to create download table in SSSOM format
+create_sssom_output <- function(type, inputIdentifierList, sec2priDataSource, sourceVersion, priID_list, mapping_table, sec2pri_table) {
+  primaryIDs <- get_primary_ids(type, inputIdentifierList, priID_list)
+  unknownIDs <- get_unknown_ids(type, inputIdentifierList, priID_list, mapping_table)
+  secPriIDs <- get_sec_pri_ids(type, inputIdentifierList, priID_list, mapping_table)
+  
+  if(sec2priDataSource %in% c("HGNC Accession number", "NCBI")){
+    if(length(primaryIDs) == 0){
+      output <- mapping_table %>% 
+        dplyr::filter(secondaryID %in% c(inputIdentifierList)) %>% # input is secondary ID 
+        dplyr::select(
+          secondaryID,
+          secondarySymbol,
+          predicateID,
+          primaryID,
+          primarySymbol,
+          mapping_cardinality_sec2pri,
+          comment,
+          source)
+    } else {
+      output <- dplyr::bind_rows(
+        mapping_table %>% 
+          dplyr::filter(secondaryID %in% c(inputIdentifierList)) %>% # input is secondary ID 
+          dplyr::select(
+            secondaryID, 
+            secondarySymbol, 
+            predicateID, 
+            primaryID, 
+            primarySymbol, 
+            mapping_cardinality_sec2pri, 
+            comment, 
+            source) %>%
+          dplyr::mutate(secondaryID = as.character(secondaryID)),
+        mapping_table %>% 
+          dplyr::filter(primaryID %in% primaryIDs) %>% # input is primary ID 
+          dplyr::select(primaryID, primarySymbol, source) %>%
+          dplyr::mutate(
+            secondaryID = as.character(primaryID),
+            secondarySymbol = primarySymbol,
+            predicateID = "skos:exactMatch",
+            mapping_cardinality_sec2pri = NA,
+            comment = "The input is a primary ID.")
+      )
+    }
+    output <- output %>% 
+      dplyr::rename(
+        subject_id = secondaryID,
+        subject_label = secondarySymbol,
+        predicate_id = predicateID,
+        object_id = primaryID, 
+        object_label = primarySymbol,
+        mapping_cardinality = mapping_cardinality_sec2pri)
+  } else if(grepl("alias2symbol", sec2priDataSource)){
+    if(length(primaryIDs) == 0){
+      output <- mapping_table %>% 
+        dplyr::filter(secondarySymbol %in% c(inputIdentifierList)) %>% # input is secondary ID 
+        dplyr::select(
+          secondarySymbol,
+          predicateID,
+          primaryID, 
+          primarySymbol,
+          mapping_cardinality_sec2pri,
+          comment,
+          source) %>%
+        dplyr::mutate(
+          secondaryID = NA,
+          primaryID = as.character(primaryID))
+    } else {
+      output <- dplyr::bind_rows(
+        mapping_table %>% 
+          dplyr::filter(secondarySymbol %in% c(inputIdentifierList)) %>% # input is secondary ID 
+          dplyr::select(
+            secondarySymbol, 
+            predicateID,
+            primaryID,
+            primarySymbol, 
+            mapping_cardinality_sec2pri, 
+            comment, 
+            source) %>%
+          dplyr::mutate(primaryID = as.character(primaryID)),
+        mapping_table %>% 
+          dplyr::filter(primarySymbol %in% primaryIDs) %>% # input is primary ID 
+          dplyr::select(
+            primaryID,
+            primarySymbol,
+            source) %>%
+          dplyr::mutate(
+            primaryID = as.character(primaryID),
+            secondaryID = primaryID,
+            secondarySymbol = primarySymbol,
+            predicateID = "skos:exactMatch",
+            mapping_cardinality_sec2pri = NA,
+            comment = "The input is a primary ID.")
+      ) 
+    }
+    output <- output %>%
+      dplyr::rename(
+        subject_id = secondaryID,
+        subject_label = secondarySymbol, 
+        predicate_id = predicateID,
+        object_id = primaryID, 
+        object_label = primarySymbol, 
+        mapping_cardinality = mapping_cardinality_sec2pri) 
+  } else if(sec2priDataSource == "UniProt"){
+    if(length(primaryIDs) == 0){
+      output <- mapping_table %>% 
+        dplyr::filter(secondaryID %in% c(inputIdentifierList)) %>% # input is secondary ID 
+        dplyr::select(
+          secondaryID, 
+          predicateID, 
+          primaryID, 
+          mapping_cardinality_sec2pri, 
+          comment, 
+          source)
+    } else {
+      output <- dplyr::bind_rows(
+        mapping_table %>% 
+          dplyr::filter(secondaryID %in% c(inputIdentifierList)) %>% # input is secondary ID 
+          dplyr::select(
+            secondaryID,
+            predicateID, 
+            primaryID, 
+            mapping_cardinality_sec2pri, 
+            comment,
+            source),
+        mapping_table %>% 
+          dplyr::filter(primaryID %in% primaryIDs) %>% # input is primary ID 
+          dplyr::select(primaryID, source) %>%
+          dplyr::mutate(
+            secondaryID = primaryID,
+            predicateID = "skos:exactMatch",
+            mapping_cardinality_sec2pri = NA,
+            comment = "The input is a primary ID.")
+      )}
+    output <- output %>%
+      dplyr::rename(
+        subject_id = secondaryID, 
+        predicate_id = predicateID, 
+        object_id = primaryID, 
+        mapping_cardinality = mapping_cardinality_sec2pri) 
+  } else if(sec2priDataSource %in% c("ChEBI", "HMDB", "Wikidata genes/proteins", "Wikidata metabolites")){
+    mapping_table <- mapping_table %>% add_mapping_cardinality() %>% add_predicate()
+    if(length(primaryIDs) == 0){
+      output <-  mapping_table %>% 
+        dplyr::filter(secondaryID %in% c(inputIdentifierList)) # input is secondary ID 
+    } else {
+      output <- dplyr::bind_rows(
+        mapping_table %>% 
+          dplyr::filter(secondaryID %in% c(inputIdentifierList)), # input is secondary ID
+        mapping_table %>% 
+          dplyr::filter(primaryID %in% primaryIDs) %>% # input is primary ID 
+          dplyr::select(primaryID) %>%
+          dplyr::mutate(
+            secondaryID = primaryID,
+            predicate_id = "skos:exactMatch",
+            mapping_cardinality = NA,
+            comment = "The input is a primary ID.")
+      )}
+    output <- output %>% dplyr::rename(subject_id = secondaryID, object_id = primaryID)
+  } else if(grepl("synonym2name", sec2priDataSource)){
+    if(length(primaryIDs) == 0){
+      output <-  mapping_table %>% 
+        dplyr::filter(synonym %in% c(inputIdentifierList)) %>% # input is secondary ID 
+        dplyr::mutate(
+          secondaryID = NA,
+          predicate_id = NA,
+          mapping_cardinality = NA)
+    } else {
+      output <- dplyr::bind_rows(
+        mapping_table %>% 
+          dplyr::filter(synonym %in% c(inputIdentifierList)), # input is secondary ID
+        mapping_table %>% 
+          dplyr::filter(name %in% primaryIDs) %>% # input is primary ID 
+          dplyr::select(primaryID, name, sourceFile) %>%
+          dplyr::mutate(
+            secondaryID = primaryID,
+            synonym = name,
+            predicate_id = NA,
+            mapping_cardinality = NA,
+            comment = "The input is a metabolite name.")
+      )}
+    output <- output %>% dplyr::rename(
+      subject_id = secondaryID, 
+      subject_label = synonym, 
+      object_id = primaryID, 
+      object_label = name)
+    if(sec2priDataSource == "Metabolite synonym2name"){
+      output <- output %>% dplyr::mutate(source = sourceVersion) 
+    }
+  }
+  
+  # Add unknown IDs
+  if(length(unknownIDs) != 0){
+    unknownData <- data.frame(
+      subject = unknownIDs,
+      comment = "The input is unknown.", check.names = FALSE)
+    colnames(unknownData)[1] = ifelse(grepl("synonym2name|alias2symbol", sec2priDataSource), "subject_label", "subject_id")
+    output <- dplyr::bind_rows(output, unknownData) 
+  }
+  
+  # Add a comment for ambiguous IDs (secPriIDs)
+  if(length(secPriIDs) != 0){
+    output <- output %>%
+      mutate(
+        comment = ifelse(
+          `input (secondary)` %in% secPriIDs, 
+          paste0(
+            "NOTE: The input is ambiguous, meaning that based on the database it has been used as both a secondary and a primary name or symbol. ",
+            comment),
+          comment
+        )
+      )
+  }
+  
+  output <- output %>%
+    dplyr::select(dplyr::one_of(
+      c("subject_id",
+        "subject_label",
+        "predicate_id",
+        "object_id",
+        "object_label",
+        "mapping_cardinality",
+        "comment",
+        "source"))) %>%
+    unique()
+  
+  return(output)
+}
+
+# Define a function to write the sssom file
+write_sssom_tsv <- function(input_data, output_file, source = "") {
+  # Define the CURIE map
+  curie_map <- list(
+    "CHEBI:" = "http://purl.obolibrary.org/obo/CHEBI_",
+    "HMDB:" = "http://www.hmdb.ca/metabolites/",
+    "Wikidata:" = "http://www.wikidata.org/entity/",
+    "UniProt:" = "http://identifiers.org/uniprot/",
+    "HGNC:" = "http://identifiers.org/hgnc/",
+    "NCBI:" = "http://www.ncbi.nlm.nih.gov/gene/",
+    "skos:" = "http://www.w3.org/2004/02/skos/core#",
+    "owl:" = "http://www.w3.org/2002/07/owl#"
+  )
+  
+  
+  # Write the CURIE map as comments in the output file
+  curie_comments <- paste0("# curie_map:\n")
+  for(curie in names(curie_map)) {
+    curie_comments <- paste0(curie_comments, "#   ", curie, " ", curie_map[[curie]], "\n")
+  }
+  if(source != "") curie_comments <- paste0(curie_comments, "# source: ", source, "\n")
+  if(any(colnames(input_data) == "source") && length(unique(input_data$source[!is.na(input_data$source)])) == 1){
+    source = unique(input_data$source[input_data$source != "NA"][!is.na(input_data$source)])
+    curie_comments <- paste0(curie_comments, "# source: ", source, "\n")
+    input_data$source = NULL
+  }
+  
+  # Write the SSSOM data frame and CURIE map comments to the output file
+  writeLines(curie_comments, con = output_file, sep = "")
+  write.table(input_data, file = output_file, sep = "\t", quote = FALSE, row.names = FALSE, append = TRUE)
 }
 
 # Define a function for BridgeDb mapping
@@ -675,79 +802,5 @@ Xref_function <- function(identifiers, inputSpecies = "Human",
   
 }
 
-# Define a function for adding mapping cardinality
-add_mapping_cardinality <- function(dataFile) {
-  # Calculate counts
-  dataFile <- dataFile %>%
-    group_by(primaryID) %>% 
-    mutate(count_primaryID = n(),
-           count_primaryID = ifelse(primaryID == "Entry Withdrawn", 0, count_primaryID)) %>%
-    group_by(secondaryID) %>% 
-    mutate(count_secondaryID = n()) %>%
-    ungroup()
-  # Add mapping_cardinality column
-  dataFile <- dataFile %>%
-    mutate(mapping_cardinality = ifelse(
-      count_secondaryID == 1 & count_primaryID == 1,
-      "1:1", ifelse(
-        count_secondaryID > 1 & count_primaryID == 1,
-        "1:n", ifelse(
-          count_secondaryID == 1 & count_primaryID > 1,
-          "n:1", ifelse(
-            count_secondaryID == 1 & count_primaryID == 0,
-            "1:0", ifelse(
-              count_secondaryID > 1 & count_primaryID > 1,
-              "n:n", NA
-              ))))))
-  
-  # Return the updated data
-  return(select(dataFile, -c(count_primaryID, count_secondaryID)))
-}
 
-# Define a function for adding mapping cardinality
-add_predicate <- function(dataFile) {
-  # Add mapping_cardinality column
-  dataFile <- dataFile %>%
-    mutate(
-      predicate_id = ifelse(
-        mapping_cardinality %in% c("1:n", "n:n"), #the secondary ID that Split into multiple OR multiple secondary IDs merged/splited into multiple primary IDs
-        "oboInOwl:consider", ifelse(
-          mapping_cardinality %in% c("1:1", "n:1", "1:0"), #the secondary ID replace by new ID OR multiple secondary IDs merged into one primary ID
-          "IAO:0100001", NA
-          )))
-  
-  # Return the updated data
-  return(dataFile)
-}
-
-# Define a function to write the sssom file
-write_sssom_tsv <- function(input_data, output_file, source = "") {
-  # Define the CURIE map
-  curie_map <- list(
-    "CHEBI:" = "http://purl.obolibrary.org/obo/CHEBI_",
-    "HMDB:" = "http://www.hmdb.ca/metabolites/",
-    "Wikidata:" = "http://www.wikidata.org/entity/",
-    "UniProt:" = "http://identifiers.org/uniprot/",
-    "HGNC:" = "http://identifiers.org/hgnc/",
-    "NCBI:" = "http://www.ncbi.nlm.nih.gov/gene/",
-    "skos:" = "http://www.w3.org/2004/02/skos/core#",
-    "owl:" = "http://www.w3.org/2002/07/owl#"
-  )
-  
-  
-  # Write the CURIE map as comments in the output file
-  curie_comments <- paste0("# curie_map:\n")
-  for(curie in names(curie_map)) {
-    curie_comments <- paste0(curie_comments, "#   ", curie, " ", curie_map[[curie]], "\n")
-  }
-  if(source != "") curie_comments <- paste0(curie_comments, "# source: ", source, "\n")
-  if(any(colnames(input_data) == "source") && length(unique(input_data$source[!is.na(input_data$source)])) == 1){
-    source = unique(input_data$source[input_data$source != "NA"][!is.na(input_data$source)])
-    curie_comments <- paste0(curie_comments, "# source: ", source, "\n")
-    input_data$source = NULL
-  }
-  # Write the SSSOM data frame and CURIE map comments to the output file
-  writeLines(curie_comments, con = output_file, sep = "")
-  write.table(input_data, file = output_file, sep = "\t", quote = FALSE, row.names = FALSE, append = TRUE)
-}
 
