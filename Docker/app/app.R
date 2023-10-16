@@ -86,7 +86,7 @@ ui <- function() {
         div(
           div(
             h5(""),
-            strong("Omics IDRefiner"),
+            strong("Omics FixID"),
             style = "float:left;justify-content: flex-end;color: #004578; background-color: white;"
           ),
           div(
@@ -129,20 +129,20 @@ ui <- function() {
           ),
           "These tools currently do not have an API or other form of programmatic access, leading to issues in big omics data analysis."),
         br(),
-        h4(strong("Omics IDRefiner"), style = "color: #004578;"),
-        p("To address the challenges of integrating data from different biological sources that contain secondary identifiers, we developed a user-friendly Shiny app called Omics IDRefiner, which provides two key functions:",
+        h4(strong("Omics FixID"), style = "color: #004578;"),
+        p("To address the challenges of integrating data from different biological sources that contain secondary identifiers, we developed a user-friendly Shiny app called Omics FixID, which provides two key functions:",
           tags$ul(
             tags$li(style = "list-style-type: decimal;",
-                    HTML("<b><span style='font-size:15px;color: #004578;'>IDRefiner:</span></b>"),
+                    HTML("<b><span style='font-size:15px;color: #004578;'>FixID:</span></b>"),
                     br(),
                     "provides statistics on the percentage of secondary identifiers in the dataset and converts outdated secondary identifiers to current primary identifiers, if available.",
-                    "The IDRefiner functionality currently covers secondary identifiers from",
+                    "The FixID functionality currently covers secondary identifiers from",
                     HTML("<b>HGNC</b>"), ", ",
                     HTML("<b>HMDB</b>"), ", ",
                     HTML("<b>ChEBI</b>"), "and ",
                     HTML("<b>Wikidata</b>"),
                     "which can be converted to the corresponding primary identifier from the initial database.",
-                    "After this step, the IDMapper can be used to convert the primary-ID-enhanced dataset to any other database currently supported by BridgeDb:",
+                    "After this step, the CrossMapID can be used to convert the primary-ID-enhanced dataset to any other database currently supported by BridgeDb:",
                     tags$ul(
                       tags$li(
                         "The full overview of supported databases is available on the BridgeDb website (bridgedb.org/pages/system-codes)."
@@ -150,7 +150,7 @@ ui <- function() {
                     )
             ),
             tags$li(style = "list-style-type: decimal;",
-                    HTML("<b><span style='font-size:15px;color: #004578;'>IDMapper:</span></b>"),
+                    HTML("<b><span style='font-size:15px;color: #004578;'>CrossMapID:</span></b>"),
                     br(),
                     "uses BridgeDb's REST-API to convert identifiers.")
             
@@ -168,7 +168,7 @@ ui <- function() {
       ),
       # Tab 2: Sec2pri
       tabPanel(
-        "IDRefiner", 
+        "FixID", 
         icon = icon("table"),
         div(
           style = "margin-top: 15px;",
@@ -211,7 +211,7 @@ ui <- function() {
               div(style = "margin-top: -10px"),
               div(
                 actionButton(
-                  "sec2pri_get", "Refine IDs",
+                  "sec2pri_get", "FixID",
                   style = "color: white; background-color: #004578; border-color: #004578"),
                 actionButton(
                   "sec2pri_clear_list", "Clear results",
@@ -243,7 +243,7 @@ ui <- function() {
       ),
       # Tab 3: BridgeDb
       tabPanel(
-        "IDMapper", 
+        "CrossMapID", 
         icon = icon("table"),
         div(
           style = "margin-top: 15px;",
@@ -521,7 +521,7 @@ server <- function(input, output, session) {
      if(!is.null(sec2pri_mapping$sec2pri_table) & user_selection() == "sec2pri_get") {
        actionButton(
          "copyPrimaryID",
-         "Copy primary IDs to IDMapper", 
+         "Copy primary IDs to CrossMapID", 
          style = "color: #96b77d; background-color:#EEEEEE; border-color: #96b77d; float: right;")
      } 
    })
@@ -555,7 +555,7 @@ server <- function(input, output, session) {
   # Download results
   output$sec2pri_download <- downloadHandler(
     filename = function() {
-      paste0("IDRefiner_mapping_", gsub(" ", "_", input$sec2priDataSource), ".", input$sec2pri_download_format)
+      paste0("OmicsFixID_mapping_", gsub(" ", "_", input$sec2priDataSource), ".", input$sec2pri_download_format)
     },
     
     content = function(file) {
@@ -812,7 +812,7 @@ server <- function(input, output, session) {
   ## Download results
   output$BridgeDb_download <- downloadHandler(
     filename = function() {
-      paste0("IDMapper.", input$BridgeDb_download_format)
+      paste0("CrossMapID.", input$BridgeDb_download_format)
     },
     content = function(file) {
       if(!is.null(BridgeDb_output())) {
