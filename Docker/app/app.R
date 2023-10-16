@@ -561,7 +561,6 @@ server <- function(input, output, session) {
     content = function(file) {
       if(!is.null(sec2pri_output())) {
           if(input$sec2pri_download_format %in% c("tsv", "csv")){
-            
             output <- create_tsvORcsv_output(
               type = input$type,
               inputIdentifierList = secIdentifiersList(),
@@ -569,16 +568,17 @@ server <- function(input, output, session) {
               priID_list = read_data_primary(),
               mapping_table = read_data_all(),
               sec2pri_table = sec2pri_output())
-            print(output)
-            print(sec2pri_output())
             write.table(
               output, file, row.names = FALSE,
               sep = ifelse(input$sec2pri_download_format == "csv", ",", "\t"),
               quote = FALSE
             )
+            
         } else if(input$sec2pri_download_format == "sssom.tsv"){
-          sourceVersion <- get_source_version(sec2priDataSource = input$sec2priDataSource)
-          
+          sourceVersion <- get_source_version(
+            sec2priDataSource = input$sec2priDataSource, 
+            mapping_table = read_data_all())
+
           output <- create_sssom_output(
             type = input$type,
             inputIdentifierList = secIdentifiersList(),
@@ -587,11 +587,14 @@ server <- function(input, output, session) {
             priID_list = read_data_primary(),
             mapping_table = read_data_all(),
             sec2pri_table = sec2pri_output())
-            print(output)
-            
+          
           write_sssom_tsv(
             output, file,
-            source = ifelse(grepl("HMDB|ChEBI|Wikidata", input$sec2priDataSource) && exists("sourceVersion"), sourceVersion, ""))
+            source = ifelse(
+              grepl("HMDB|ChEBI|Wikidata", input$sec2priDataSource),
+              sourceVersion$metadata[sourceVersion$datasource == gsub(" .*", "", input$sec2priDataSource)],
+              "")
+            )
         }
       }
     }

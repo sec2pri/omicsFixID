@@ -284,8 +284,16 @@ create_plot <- function(freq_table, IDtype){
                      `#secondary` = "#7da190")
   color_palette <- color_palette[names(color_palette) %in% freq_table$type]
   row_order <- c(`#unknown` = 3,  `#primary` = 2, `#secondary` = 1)
-  ## Plot theme
-  plot_theme <- ggplot2::theme_minimal() +
+
+  ggplot2::ggplot(
+    freq_table %>% 
+      dplyr::filter(!type %in% c("#input IDs", "#pri_sec"), no != 0) %>%
+      dplyr::mutate(row_order = row_order[match(type, names(row_order))]),
+    ggplot2::aes(x = reorder(type, row_order), y = no, fill = type)) +
+    ggplot2::geom_col(position = ggplot2::position_dodge(0.9), width = 0.9) +
+    ggplot2::scale_fill_manual(values = color_palette) +
+    ggplot2::coord_flip() +
+    ggplot2::theme_minimal() +
     ggplot2::theme(
       axis.title = ggplot2::element_blank(),
       panel.border = ggplot2::element_blank(),
@@ -295,24 +303,15 @@ create_plot <- function(freq_table, IDtype){
       axis.text.x = ggplot2::element_blank(),
       axis.text.y = ggplot2::element_text(size = 16),
       plot.title = ggplot2::element_text(size = 16, face = "bold")
-    )
-  ggplot2::ggplot(
-    freq_table %>% 
-      dplyr::filter(!type %in% c("#input IDs", "#pri_sec"), no != 0) %>%
-      dplyr::mutate(row_order = row_order[match(type, names(row_order))]),
-    ggplot2::aes(x = reorder(type, row_order), y = no, fill = type)) +
-    ggplot2::geom_col(position = ggplot2::position_dodge(0.9), width = 0.9) +
-    ggplot2::scale_fill_manual(values = color_palette) +
-    ggplot2::coord_flip() +
-    plot_theme + 
-    ggplot2::ggtitle(ifelse(is.na(freq_table$no[1]), "",
-                            paste0(freq_table$no[1], 
+    ) + 
+    ggplot2::ggtitle(ifelse(is.na(freq_table$no[freq_table$type == "#input IDs"]), "",
+                            paste0(freq_table$no[freq_table$type == "#input IDs"], 
                                    ifelse(IDtype == "identifierType",
                                           " (unique) input identifiers", 
                                           " (unique) input symbols/names"), ":"))) +
-    ggplot2::labs(subtitle = ifelse(freq_table$no[2] == 0, "",
-                                    paste0(freq_table[2], " (unique) input", 
-                                           ifelse(freq_table$no[2] == 1, " is ", "s are "), 
+    ggplot2::labs(subtitle = ifelse(freq_table$no[freq_table$type == "#pri_sec"] == 0, "",
+                                    paste0(freq_table$no[freq_table$type == "#pri_sec"], " (unique) input", 
+                                           ifelse(freq_table$no[freq_table$type == "#pri_sec"] == 1, " is ", "s are "), 
                                            "both primary and secondary."))) +
     ggplot2::geom_text(ggplot2::aes(y = no, label = no), size = 6,
                        position = ggplot2::position_stack(vjust = .5)) +
@@ -356,7 +355,7 @@ create_tsvORcsv_output <- function(type, inputIdentifierList, sec2priDataSource,
           comment = "The input is a primary ID.", 
           check.names = FALSE))
 
-    } else if(grep("alias2symbol", sec2priDataSource)){
+    } else if(grepl("alias2symbol", sec2priDataSource)){
       output <- dplyr::bind_rows(
         sec2pri_table,
         data.frame(`input (secondary)` = primaryIDs, 
@@ -364,7 +363,9 @@ create_tsvORcsv_output <- function(type, inputIdentifierList, sec2priDataSource,
                    comment = "The input is a primary gene symbol.", check.names = FALSE) %>%
           mutate(`primary ID` = mapping_table$primaryID[match(`primary symbol`, mapping_table$primarySymbol)])
       )
-    } else if(grep("synonym2name", sec2priDataSource)){
+      
+      
+    } else if(sec2priDataSource %in% c("Metabolite synonym2name", "ChEBI synonym2name", "HMDB synonym2name", "Wikidata synonym2name")){
       output <- dplyr::bind_rows(
         sec2pri_table,
         data.frame(`input (secondary)` = primaryIDs, 
@@ -399,51 +400,18 @@ create_tsvORcsv_output <- function(type, inputIdentifierList, sec2priDataSource,
 }
 
 # Define a function to get datasource version
-get_source_version <- function(sec2priDataSource){
-  if(sec2priDataSource %in% c("ChEBI", "HMDB", "Wikidata genes/proteins", "Wikidata metabolites")){
-    sourceVersion <- read.table("processed_mapping_files/dataSourceVersion.tsv", sep = "\t", header = TRUE, as.is = TRUE)
-    sourceVersion <- sourceVersion[match(
-      gsub(" .*", "", sec2priDataSource), 
-      sourceVersion$datasource),]
-    sourceVersion <- paste0(
-      "The data was ", 
-      sourceVersion$type,
-      ifelse(
-        sourceVersion$type == "queried", " from ", " on "),
-      sourceVersion$website,
-      ifelse(sourceVersion$type == "queried", " on ", " and downloaded on "), 
-      sourceVersion$date, 
-      ifelse(sourceVersion$type == "queried", ".", paste0(" (version: ", sourceVersion$version, ")."))
-    )
-  }
-  if(grepl("synonym2name", sec2priDataSource) && sec2priDataSource != "Metabolite synonym2name"){
-    sourceVersion <- read.table("processed_mapping_files/dataSourceVersion.tsv", sep = "\t", header = TRUE)
-    if(grepl("HMDB|ChEBI|Wikidata", sec2priDataSource)){
-      sourceVersion <- sourceVersion[match(gsub(" .*", "", sec2priDataSource), sourceVersion$datasource),]
-      sourceVersion <- paste0(
-        "The data was ", 
-        sourceVersion$type, 
-        ifelse(sourceVersion$type == "queried", " from ", " on "), 
-        sourceVersion$website, 
-        ifelse(sourceVersion$type == "queried", " on ", " and downloaded on "),
-        sourceVersion$date, 
-        ifelse(sourceVersion$type == "queried", ".", paste0(" (version: ", sourceVersion$version, ")."))
-      )
-    }
-  }
-  if(sec2priDataSource == "Metabolite synonym2name"){
-    sourceVersion <- sourceVersion[match(sourceFile, sourceVersion$datasource),]
-    sourceVersion <- paste0(
-      "The data was ", 
-      sourceVersion$type, 
-      ifelse(sourceVersion$type == "queried", " from ", " on "), 
-      sourceVersion$website, 
-      ifelse(sourceVersion$type == "queried", " on ", " and downloaded on "), 
-      sourceVersion$date, 
-      ifelse(sourceVersion$type == "queried", ".", paste0(" (version: ", sourceVersion$version, ")."))
-    )
-  }
-  if(exists("sourceVersion")) return(sourceVersion)
+get_source_version <- function(sec2priDataSource, mapping_table){
+  sourceVersion <- read.table("processed_mapping_files/dataSourceVersion.tsv", sep = "\t", header = TRUE, as.is = TRUE)
+  sourceVersion$metadata <- paste0(
+    "The data was ", 
+    sourceVersion$type,
+    ifelse(sourceVersion$type == "queried", " from ", " on "),
+    sourceVersion$website,
+    ifelse(sourceVersion$type == "queried", " on ", " and downloaded on "), 
+    sourceVersion$date, 
+    ifelse(sourceVersion$type == "queried", ".", paste0(" (version: ", sourceVersion$version, ")."))
+  )
+  return(sourceVersion)
 }
 
 # Define a function for adding mapping cardinality
@@ -678,7 +646,8 @@ create_sssom_output <- function(type, inputIdentifierList, sec2priDataSource, so
       object_id = primaryID, 
       object_label = name)
     if(sec2priDataSource == "Metabolite synonym2name"){
-      output <- output %>% dplyr::mutate(source = sourceVersion) 
+      output <- output %>%
+        dplyr::mutate(source = sourceVersion$metadata[match(sourceFile, sourceVersion$datasource)]) 
     }
   }
   
@@ -693,16 +662,13 @@ create_sssom_output <- function(type, inputIdentifierList, sec2priDataSource, so
   
   # Add a comment for ambiguous IDs (secPriIDs)
   if(length(secPriIDs) != 0){
-    output <- output %>%
-      mutate(
-        comment = ifelse(
-          `input (secondary)` %in% secPriIDs, 
-          paste0(
-            "NOTE: The input is ambiguous, meaning that based on the database it has been used as both a secondary and a primary name or symbol. ",
-            comment),
-          comment
-        )
-      )
+    output$comment <- ifelse(
+      output$subject_label %in% secPriIDs | output$subject_id %in% secPriIDs, 
+      paste0(
+        "NOTE: The input is ambiguous, meaning that based on the database it has been used as both a secondary and a primary name or symbol. ",
+        output$comment),
+      output$comment)
+                             
   }
   
   output <- output %>%
@@ -721,7 +687,7 @@ create_sssom_output <- function(type, inputIdentifierList, sec2priDataSource, so
 }
 
 # Define a function to write the sssom file
-write_sssom_tsv <- function(input_data, output_file, source = "") {
+write_sssom_tsv <- function(input_data, output_file, source) {
   # Define the CURIE map
   curie_map <- list(
     "CHEBI:" = "http://purl.obolibrary.org/obo/CHEBI_",
@@ -740,6 +706,7 @@ write_sssom_tsv <- function(input_data, output_file, source = "") {
   for(curie in names(curie_map)) {
     curie_comments <- paste0(curie_comments, "#   ", curie, " ", curie_map[[curie]], "\n")
   }
+
   if(source != "") curie_comments <- paste0(curie_comments, "# source: ", source, "\n")
   if(any(colnames(input_data) == "source") && length(unique(input_data$source[!is.na(input_data$source)])) == 1){
     source = unique(input_data$source[input_data$source != "NA"][!is.na(input_data$source)])
