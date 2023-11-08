@@ -2,8 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
-*.tsv
-*.csv
 *.bridge
 app/renv.lock
 app/sec2pri_module.R
@@ -12,3 +10,11 @@ app/renv/activate.R
 app/.Rprofile
 app/renv/activate.R
 app/rsconnect/shinyapps.io/tabbassidaloii/OmicsIDRefiner.dcf
+.Rbuildignore
+.Rprofile
+renv/activate.R
+renv.lock
+*.dll
+renv/*
+app.Rproj
+omicsFixID.Rproj
