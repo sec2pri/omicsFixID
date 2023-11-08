@@ -1,7 +1,0 @@
-tooltip	description
-Mapping type	Specify the input type: choose "Identifier" if your list comprises unique and persistent identifiers. Alternatively, if your list includes gene symbols or metabolite names, select "Symbol/Name."
-Data source	to be added
-Identifier file	to be added
-Identifiers	to be added
-Format	You can download your results in CSV, TSV, and SSSOM formats. CSV (Comma-Separated Values) is a simple tabular format for data storage and exchange, with fields separated by commas. TSV (Tab-Separated Values) is a tabular format similar to CSV, but with fields separated by tabs, often used to avoid comma-related issues. SSSOM (Simple Standard for Sharing Ontology Mappings) is a specialized format for sharing ontology mappings, including metadata, enhancing data interoperability.
-	to be added

@@ -1,5 +1,5 @@
 # Read the required files
-dataSources <- data.table::fread("dataSource.csv")
+dataSources <- read.csv("dataSource.csv")
 
 # Load tooltip data from file
 tooltips <- read.csv("tooltips.txt", sep = "\t")
@@ -263,7 +263,7 @@ read_primary_input <- function(sec2priDataSource) {
           "processed_mapping_files/Wikidata_metabolites_synonym2name.tsv"
         )[["name"]]
       )
-    
+
   } else {
     priID_list <-
       unique(unlist(data.table::fread(
@@ -341,7 +341,7 @@ count_id_group <-
       get_sec_pri_ids(type, inputIdentifierList, priID_list, mapping_table)
     unknownIDs <-
       get_unknown_ids(type, inputIdentifierList, priID_list, mapping_table)
-    
+
     freq_table = data.frame(
       type = c(
         "#input IDs",
@@ -428,7 +428,7 @@ create_metadata <- function(sec2priDataSource) {
         paste0(" (version: ", sourceVersion$version, ").")
       )
     )
-  
+
   if (sec2priDataSource == "Metabolite synonym2name") {
     sec2pri_metadata <-
       renderText(HTML(
@@ -457,7 +457,7 @@ create_plot <- function(freq_table, IDtype) {
     `#primary` = 2,
     `#secondary` = 1
   )
-  
+
   ggplot2::ggplot(
     freq_table %>%
       dplyr::filter(!type %in% c("#input IDs", "#pri_sec"), no != 0) %>%
@@ -528,7 +528,7 @@ primary_id_list <-
     } else {
       primaryIDs <-
         mapping_table$primaryID[mapping_table$primarySymbol %in% primaryIDs]
-      
+
     }
     primary_id <- unique(c(sec2pri_table$`primary ID`, primaryIDs))
     return(primary_id)
@@ -555,7 +555,7 @@ create_tsvORcsv_output <-
       get_unknown_ids(type, inputIdentifierList, priID_list, mapping_table)
     secPriIDs <-
       get_sec_pri_ids(type, inputIdentifierList, priID_list, mapping_table)
-    
+
     if (length(primaryIDs) == 0) {
       output <- sec2pri_table
     } else if (length(primaryIDs) != 0) {
@@ -569,7 +569,7 @@ create_tsvORcsv_output <-
             check.names = FALSE
           )
         )
-        
+
       } else if (grepl("alias2symbol", sec2priDataSource)) {
         output <- dplyr::bind_rows(
           sec2pri_table,
@@ -581,8 +581,8 @@ create_tsvORcsv_output <-
           ) %>%
             mutate(`primary ID` = mapping_table$primaryID[match(`primary symbol`, mapping_table$primarySymbol)])
         )
-        
-        
+
+
       } else if (sec2priDataSource %in% c(
         "Metabolite synonym2name",
         "ChEBI synonym2name",
@@ -601,7 +601,7 @@ create_tsvORcsv_output <-
         )
       }
     }
-    
+
     # Add unknown IDs
     if (length(unknownIDs) != 0)
       output <- dplyr::bind_rows(
@@ -612,7 +612,7 @@ create_tsvORcsv_output <-
           check.names = FALSE
         )
       )
-    
+
     # Add a comment for ambiguous IDs (secPriIDs)
     if (length(secPriIDs) != 0) {
       output <- output %>%
@@ -685,7 +685,7 @@ add_mapping_cardinality <- function(dataFile) {
         )
       )
     ))
-  
+
   # Return the updated data
   return(select(dataFile,-c(count_primaryID, count_secondaryID)))
 }
@@ -705,7 +705,7 @@ add_predicate <- function(dataFile) {
         NA
       )
     ))
-  
+
   # Return the updated data
   return(dataFile)
 }
@@ -724,7 +724,7 @@ create_sssom_output <-
       get_unknown_ids(type, inputIdentifierList, priID_list, mapping_table)
     secPriIDs <-
       get_sec_pri_ids(type, inputIdentifierList, priID_list, mapping_table)
-    
+
     if (sec2priDataSource %in% c("HGNC Accession number", "NCBI")) {
       output <- mapping_table %>%
         dplyr::filter(secondaryID %in% c(inputIdentifierList)) %>% # input is secondary ID
@@ -892,13 +892,13 @@ create_sssom_output <-
         object_id = primaryID,
         object_label = name
       )
-      
+
       if (sec2priDataSource == "Metabolite synonym2name") {
         output <- output %>%
           dplyr::mutate(source = sourceVersion$metadata[match(sourceFile, sourceVersion$datasource)])
       }
     }
-    
+
     # Add unknown IDs
     if (length(unknownIDs) != 0) {
       unknownData <- data.frame(subject = unknownIDs,
@@ -911,7 +911,7 @@ create_sssom_output <-
       )
       output <- dplyr::bind_rows(output, unknownData)
     }
-    
+
     # Add a comment for ambiguous IDs (secPriIDs)
     if (length(secPriIDs) != 0) {
       output$comment <- ifelse(
@@ -923,9 +923,9 @@ create_sssom_output <-
         ),
         output$comment
       )
-      
+
     }
-    
+
     output <- output %>%
       dplyr::select(dplyr::one_of(
         c(
@@ -940,7 +940,7 @@ create_sssom_output <-
         )
       )) %>%
       unique()
-    
+
     return(output)
   }
 
@@ -957,14 +957,14 @@ write_sssom_tsv <- function(input_data, output_file, source) {
     "skos:" = "http://www.w3.org/2004/02/skos/core#",
     "owl:" = "http://www.w3.org/2002/07/owl#"
   )
-  
+
   # Write the CURIE map as comments in the output file
   curie_comments <- paste0("# curie_map:\n")
   for (curie in names(curie_map)) {
     curie_comments <-
       paste0(curie_comments, "#   ", curie, " ", curie_map[[curie]], "\n")
   }
-  
+
   if (source != "")
     curie_comments <-
     paste0(curie_comments, "# source: ", source, "\n")
@@ -975,7 +975,7 @@ write_sssom_tsv <- function(input_data, output_file, source) {
       paste0(curie_comments, "# source: ", source, "\n")
     input_data$source = NULL
   }
-  
+
   # Write the SSSOM data frame and CURIE map comments to the output file
   writeLines(curie_comments, con = output_file, sep = "")
   write.table(
@@ -1016,7 +1016,7 @@ Xref_function <- function(identifiers,
     })
     # Extracting the content in the raw text format
     out <- content(res, as = "text")
-    
+
     if (jsonlite::validate(out)) {
       # check if JSON string is valid
       res <- rjson::fromJSON(json_str = out)
@@ -1039,5 +1039,5 @@ Xref_function <- function(identifiers,
       return(paste0("The response is not a valid JSON string."))
     }
   }
-  
+
 }

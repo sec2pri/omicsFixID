@@ -1,7 +1,7 @@
 # Empty the R environment
 rm(list = ls())
 options(shiny.appmode = "shiny")
-
+getwd()
 # Load required packages
 if (!"dplyr" %in% installed.packages()) {
   install.packages("dplyr")
@@ -299,7 +299,7 @@ ui <- function() {
               sidebarPanel(
                 style = "width: 250px;",
                 div(style = "margin-top: -10px"),
-                
+
                 # Render the input options for selecting a identifier type
                 radioButtons(
                   "type_BridgeDb",
@@ -416,7 +416,7 @@ server <- function(input, output, session) {
     )
   },
   deleteFile = FALSE)
-  
+
   # sec2pri tab
   # Define the input options based on identifier or symbol/name
   observe({
@@ -425,7 +425,7 @@ server <- function(input, output, session) {
       id_type(type = input$type)
     })
   })
-  
+
   # Update the TextArea based on the selected database
   observeEvent(input$sec2priDataSource, {
     # Clear the existing outputs
@@ -436,7 +436,7 @@ server <- function(input, output, session) {
                         "sec2pri_identifiers",
                         value = text_value(input$sec2priDataSource))
   })
-  
+
   # Check the input file
   sec2pri_input_file <- reactiveVal(NULL)
   observeEvent(input$sec2pri_identifiers_file, {
@@ -444,7 +444,7 @@ server <- function(input, output, session) {
       sec2pri_input_file(input$sec2pri_identifiers_file)
     }
   })
-  
+
   # Function to make a vector for input identifiers
   secIdentifiersList <- reactive({
     output$sec2pri_metadata <- NULL
@@ -454,21 +454,21 @@ server <- function(input, output, session) {
       type = input$type
     )
   })
-  
+
   # Function to read data related to the selected datasource
   read_data_all <- reactive({
     req(input$sec2priDataSource)
     mapping_table <-
       read_input(sec2priDataSource = input$sec2priDataSource)
   })
-  
+
   # Function to read primary ids/symbols/names related to the selected datasource
   read_data_primary <- reactive({
     req(input$sec2priDataSource)
     priID_list <-
       read_primary_input(sec2priDataSource = input$sec2priDataSource)
   })
-  
+
   # Function to calculate the number of primary and secondary identifiers in the input table
   sec_pri_count <- reactive({
     req(input$sec2priDataSource)
@@ -483,7 +483,7 @@ server <- function(input, output, session) {
       )
     }
   })
-  
+
   # Function to make the output table
   sec2pri_output <- reactive({
     req(input$sec2priDataSource, input$sec2pri_get)
@@ -496,7 +496,7 @@ server <- function(input, output, session) {
       )
     }
   })
-  
+
   # Display metadata based on the selected datasource
   observeEvent(input$sec2pri_get, {
     output$sec2pri_metadata <- NULL
@@ -508,7 +508,7 @@ server <- function(input, output, session) {
         renderText(HTML("<b>No input provided</b>"))
     }
   })
-  
+
   # Display plot and output table
   sec2pri_mapping <-
     reactiveValues(sec2pri_pieChart = NULL, sec2pri_table = NULL)
@@ -517,12 +517,12 @@ server <- function(input, output, session) {
                  # Clear the existing outputs
                  sec2pri_mapping$sec2pri_pieChart <- NULL
                  sec2pri_mapping$sec2pri_table <- NULL
-                 
+
                  if (!is.null(sec_pri_count())) {
                    sec2pri_mapping$sec2pri_pieChart <-
                      create_plot(freq_table = sec_pri_count(), IDtype = input$type)
                  }
-                 
+
                  if (nrow(sec2pri_output()) != 0) {
                    sec2pri_mapping$sec2pri_table <- req(
                      DT::datatable(
@@ -547,7 +547,7 @@ server <- function(input, output, session) {
                  }
                },
                ignoreInit = TRUE)
-  
+
   # Update output display
   output$sec2pri_piechart_results <- renderPlot({
     if (length(secIdentifiersList()) != 0) {
@@ -566,7 +566,7 @@ server <- function(input, output, session) {
         NULL
       }
     })
-  
+
   PriIDList <- reactive({
     if (nrow(sec2pri_output()) != 0) {
       primary_id_list(
@@ -578,15 +578,15 @@ server <- function(input, output, session) {
       )
     }
   })
-  
+
   # Create a reactiveVal to track user selection
   user_selection <- reactiveVal("")
-  
+
   # Update user_selection when the "Get Data" button is clicked
   observeEvent(input$sec2pri_get, {
     user_selection("sec2pri_get")
   })
-  
+
   # Conditionally render the "Copy Primary IDs" button
   output$copyButtonUI <- renderUI({
     if (!is.null(sec2pri_mapping$sec2pri_table) &
@@ -596,15 +596,15 @@ server <- function(input, output, session) {
                    style = "color: #96b77d; background-color:#EEEEEE; border-color: #96b77d; float: right;")
     }
   })
-  
-  
+
+
   # Copy all PrimaryID values to the text area when the button is clicked
   observeEvent(input$copyPrimaryID, {
     primary_id_text <- PriIDList()
     primary_id_text <- paste(primary_id_text, collapse = "\n")
     updateTextAreaInput(session, "BridgeDb_identifiers", value = primary_id_text)
   })
-  
+
   # Define output format
   output$downloadFormatUI <- renderUI({
     dataSource <- input$sec2priDataSource
@@ -614,7 +614,7 @@ server <- function(input, output, session) {
       } else {
         c("csv", "tsv", "sssom.tsv")
       }
-    
+
     selectInput(
       inputId = "sec2pri_download_format",
       label = HTML(
@@ -628,7 +628,7 @@ server <- function(input, output, session) {
       selected = "tsv"
     )
   })
-  
+
   # Download results
   output$sec2pri_download <- downloadHandler(
     filename = function() {
@@ -662,7 +662,7 @@ server <- function(input, output, session) {
             sec2priDataSource = input$sec2priDataSource,
             mapping_table = read_data_all()
           )
-          
+
           output <- create_sssom_output(
             type = input$type,
             inputIdentifierList = secIdentifiersList(),
@@ -672,7 +672,7 @@ server <- function(input, output, session) {
             mapping_table = read_data_all(),
             sec2pri_table = sec2pri_output()
           )
-          
+
           write_sssom_tsv(output,
                           file,
                           source = ifelse(
@@ -684,8 +684,8 @@ server <- function(input, output, session) {
       }
     }
   )
-  
-  
+
+
   # (In)Active download button
   observe({
     if (nrow(sec2pri_output()) == 0) {
@@ -694,28 +694,28 @@ server <- function(input, output, session) {
       shinyjs::enable("sec2pri_download")
     }
   })
-  
+
   # Handle clearing of input and output
   observeEvent(input$sec2pri_clear_list, {
     sec2pri_mapping$sec2pri_pieChart <- NULL
     output$sec2pri_metadata <- NULL
     sec2pri_mapping$sec2pri_table <- NULL
   })
-  
+
   # add BridgeDb logo (in the text)
   # output$bridgeDb_logo <- renderImage({
   #   list(src = "www/logo_BridgeDb.png",
   #        width = "120px",
   #        height = "70px")
   # }, deleteFile = F)
-  
+
   # add BridgeDb logo (page footer)
   # output$bridgeDb_logo_wide <- renderImage({
   #   list(src = "www/logo_BridgeDb_footer.png",
   #        width = "100%",
   #        height = "auto")
   # }, deleteFile = F)
-  
+
   # BridgeDb tab
   # Handle clearing of BridgeDb_identifiers
   observeEvent(c(input$type_BridgeDb, input$inputDataSource), {
@@ -725,7 +725,7 @@ server <- function(input, output, session) {
                           value = "") # Clear the text area
     }
   })
-  
+
   ## Define the input options based
   ### Species
   observe({
@@ -751,7 +751,7 @@ server <- function(input, output, session) {
     if (input$type_BridgeDb == "gene") {
       output$inputDataSource <- renderUI({
         BridgeDb_mapping$BridgeDb_table <- NULL
-        
+
         # Render the input options for selecting a species
         selectInput(
           inputId = "inputDataSource",
@@ -763,7 +763,7 @@ server <- function(input, output, session) {
     } else if (input$type_BridgeDb == "metabolite") {
       output$inputDataSource <- renderUI({
         BridgeDb_mapping$BridgeDb_table <- NULL
-        
+
         # Render the input options for selecting a species
         selectInput(
           inputId = "inputDataSource",
@@ -778,7 +778,7 @@ server <- function(input, output, session) {
   observe({
     if (input$type_BridgeDb == "gene") {
       BridgeDb_mapping$BridgeDb_table <- NULL
-      
+
       output$outputDataSource <- renderUI({
         # Render the input options for selecting a species
         selectInput(
@@ -791,7 +791,7 @@ server <- function(input, output, session) {
     } else if (input$type_BridgeDb == "metabolite") {
       output$outputDataSource <- renderUI({
         BridgeDb_mapping$BridgeDb_table <- NULL
-        
+
         # Render the input options for selecting a species
         selectInput(
           inputId = "outputDataSource",
@@ -802,14 +802,14 @@ server <- function(input, output, session) {
       })
     }
   })
-  
+
   BridgeDb_input_file <- reactiveVal(NULL)
   observeEvent(input$BridgeDb_identifiers_file, {
     if (!is.null(input$BridgeDb_identifiers_file)) {
       BridgeDb_input_file(input$BridgeDb_identifiers_file)
     }
   })
-  
+
   # Function to make a vector for input identifiers
   identifiersList <- reactive({
     if (!is.null(BridgeDb_input_file())) {
@@ -836,12 +836,12 @@ server <- function(input, output, session) {
       input_ids
     }
   })
-  
+
   # Function to make the output table
   BridgeDb_output <- reactive({
     req(!is.null(identifiersList()))
     BridgeDb_mapping$BridgeDb_table <- NULL
-    
+
     if (input$type_BridgeDb == "gene") {
       input_species <- input$inputSpecies
       input_data_source <- input$inputDataSource
@@ -864,12 +864,12 @@ server <- function(input, output, session) {
     }
     return(BridgeDb_results)
   })
-  
+
   BridgeDb_mapping <- reactiveValues(BridgeDb_table = NULL)
   observeEvent(input$BridgeDb_get,
                {
                  BridgeDb_mapping$BridgeDb_table <- NULL
-                 
+
                  if (!is.null(BridgeDb_output())) {
                    BridgeDb_mapping$BridgeDb_table <- req(DT::datatable(
                      BridgeDb_output(),
@@ -883,7 +883,7 @@ server <- function(input, output, session) {
                  }
                },
                ignoreInit = TRUE)
-  
+
   # Update output display
   output$BridgeDb_mapping_results <- DT::renderDT({
     if (length(identifiersList()) != 0) {
@@ -892,7 +892,7 @@ server <- function(input, output, session) {
       NULL
     }
   })
-  
+
   ## Download results
   output$BridgeDb_download <- downloadHandler(
     filename = function() {
@@ -917,7 +917,7 @@ server <- function(input, output, session) {
       shinyjs::enable("BridgeDb_download")
     }
   })
-  
+
   # Handle clearing of input and output
   observeEvent(input$BridgeDb_clear_list, {
     BridgeDb_mapping$BridgeDb_table <- NULL
