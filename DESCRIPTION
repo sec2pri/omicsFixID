@@ -1,0 +1,14 @@
+Package: omicsFixID
+Title: Convert Withdrawn/Retired Secondary Identifiers to Primary Identifiers 
+Version: 0.0.1
+Authors@R: 
+    person("Tooba", "Abbassi-Daloii", email = "t.abbassidaloii@maastrichtuniversity.nl", role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0000-0002-4904-3269"))
+Description: To address the challenges of integrating data from different biological sources that contain secondary identifiers, we developed a user-friendly Shiny app called Omics FixID, which provides two key functions. (1) FixID, provides statistics on the percentage of secondary identifiers in the dataset and converts outdated secondary identifiers to current primary identifiers, if available. The FixID functionality currently covers secondary identifiers from HGNC, HMDB, ChEBI and Wikidata which can be converted to the corresponding primary identifier from the initial database. After this step, the CrossMapID can be used to convert the primary-ID-enhanced dataset to any other database currently supported by BridgeDb. (2) CrossMapID, uses BridgeDb's REST-API to convert identifiers. The metadata for the latest update of the mapping files is also available to users for queries within the app.
+License: MIT
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports: 
+    shiny,
+    shinydashboard
