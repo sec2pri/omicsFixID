@@ -33,7 +33,7 @@ if (!"rjson" %in% installed.packages()) {
 library(rjson)
 
 # Load required functions and data
-source("global.R")
+source("R/global.R")
 
 options(rsconnect.max.bundle.files = 3145728000)
 
