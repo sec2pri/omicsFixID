@@ -100,7 +100,7 @@ ui <- function() {
     titlePanel(div(
       div(
         div(h5(""),
-            strong("Omics FixID"),
+            strong("omicsFixID"),
             style = "float:left;justify-content: flex-end;color: #004578; background-color: white;"),
         div(imageOutput("Maastricht_logo"),
             style = "display: flex; align-items: right; justify-content: flex-end;"),
@@ -147,9 +147,9 @@ ui <- function() {
           "These tools currently do not have an API or other form of programmatic access, leading to issues in big omics data analysis."
         ),
         br(),
-        h4(strong("Omics FixID"), style = "color: #004578;"),
+        h4(strong("omicsFixID"), style = "color: #004578;"),
         p(
-          "To address the challenges of integrating data from different biological sources that contain secondary identifiers, we developed a user-friendly Shiny app called Omics FixID, which provides two key functions:",
+          "To address the challenges of integrating data from different biological sources that contain secondary identifiers, we developed a user-friendly Shiny app called omicsFixID, which provides two key functions:",
           tags$ul(
             tags$li(
               style = "list-style-type: decimal;",
