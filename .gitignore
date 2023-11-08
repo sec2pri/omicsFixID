@@ -5,10 +5,10 @@
 *.tsv
 *.csv
 *.bridge
-Docker/app/renv.lock
-Docker/app/sec2pri_module.R
-Docker/app/renv/activate.R
-Docker/app/renv/activate.R
-Docker/app/.Rprofile
-Docker/app/renv/activate.R
-Docker/app/rsconnect/shinyapps.io/tabbassidaloii/OmicsIDRefiner.dcf
+app/renv.lock
+app/sec2pri_module.R
+app/renv/activate.R
+app/renv/activate.R
+app/.Rprofile
+app/renv/activate.R
+app/rsconnect/shinyapps.io/tabbassidaloii/OmicsIDRefiner.dcf
