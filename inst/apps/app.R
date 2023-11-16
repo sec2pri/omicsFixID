@@ -1,7 +1,7 @@
 # Empty the R environment
 rm(list = ls())
 options(shiny.appmode = "shiny")
-getwd()
+
 # Load required packages
 if (!"dplyr" %in% installed.packages()) {
   install.packages("dplyr")
@@ -33,7 +33,7 @@ if (!"rjson" %in% installed.packages()) {
 library(rjson)
 
 # Load required functions and data
-source("R/global.R")
+source("r/global.R")
 
 options(rsconnect.max.bundle.files = 3145728000)
 
