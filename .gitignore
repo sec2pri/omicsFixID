@@ -1,20 +1,15 @@
+# ignore project files #
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
-*.bridge
-app/renv.lock
-app/sec2pri_module.R
-app/renv/activate.R
-app/renv/activate.R
-app/.Rprofile
-app/renv/activate.R
-app/rsconnect/shinyapps.io/tabbassidaloii/OmicsIDRefiner.dcf
-.Rbuildignore
 .Rprofile
-renv/activate.R
-renv.lock
-*.dll
-renv/*
-app.Rproj
 omicsFixID.Rproj
+app.Rproj
+.Rbuildignore
+renv.lock
+renv/*
+
+# ignore input and output files #
+*.tsv
+*.bridge
