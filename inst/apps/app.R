@@ -367,7 +367,19 @@ ui <- function() {
             )),
         style = "height: 300px;"
       ),
-      # Tab 4: Contact us
+      # Tab 4: User Guide
+      tabPanel(
+        "User Guide",
+        icon = icon("clipboard"),
+        align = "justify"
+      ),
+      # Tab 5: Database info
+      tabPanel(
+        "Database Info.",
+        icon = icon("circle-info"),
+        align = "justify"
+      ),
+      # Tab 5: Contact us
       tabPanel(
         "Contact us",
         icon = icon("envelope"),
