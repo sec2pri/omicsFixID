@@ -122,81 +122,79 @@ ui <- function() {
         "About",
         icon = icon("book"),
         align = "justify",
-        # Add a summary section
-        h3(strong("Summary"), style = "color: #004578;"),
-        # onclick = "ga('send', 'event', 'click', 'link')",
-        p(
-          "Biological entities such as genes, proteins, complexes, and metabolites often have diverse identifiers across various databases, which pose a challenge for data integration. To solve this problem, identifier mapping is required to convert identifiers from one database to corresponding entities from other databases."
-        ),
-        br(),
-        h4(strong("The secondary identifier challenge"), style = "color: #004578;"),
-        p(
-          "After mapping identifiers from one database to another, integrating data can remain a challenge due to the presence of",
-          HTML("<b>retired, deleted, split, and/or merged identifiers</b>"),
-          " currently present in databases and datasets alike. These outdated identifiers are called",
-          HTML("<b><span style='font-size:15px;'>“secondary”</span></b>"),
-          " while the identifiers currently supported by databases are referred to as",
-          HTML("<b><span style='font-size:15px;'>“primary”</span></b>"),
-          ". The presence of secondary identifiers in a used dataset or database can lead to information loss and hinders effective data integration. While some tools exist to convert secondary identifiers to current ones, these tools only support one type of data (either genes/proteins or metabolites): ",
-          tags$ul(
-            tags$li("https://www.genenames.org/tools/multi-symbol-checker/"),
-            tags$li(
-              "https://www.metaboanalyst.ca/MetaboAnalyst/upload/ConvertView.xhtml"
-            )
+        div(
+          style = "margin-top: 15px;",
+          # Add database info
+          # Add a summary section
+          h3(strong("Summary"), style = "color: #004578;"),
+          # onclick = "ga('send', 'event', 'click', 'link')",
+          p(
+            "Biological entities such as genes, proteins, complexes, and metabolites often have diverse identifiers across various databases, which pose a challenge for data integration. To solve this problem, identifier mapping is required to convert identifiers from one database to corresponding entities from other databases."
           ),
-          "These tools currently do not have an API or other form of programmatic access, leading to issues in big omics data analysis."
-        ),
-        br(),
-        h4(strong("omicsFixID"), style = "color: #004578;"),
-        p(
-          "To address the challenges of integrating data from different biological sources that contain secondary identifiers, we developed a user-friendly Shiny app called omicsFixID, which provides two key functions:",
-          tags$ul(
-            tags$li(
-              style = "list-style-type: decimal;",
-              HTML(
-                "<b><span style='font-size:15px;color: #004578;'>FixID:</span></b>"
-              ),
-              br(),
-              "provides statistics on the percentage of secondary identifiers in the dataset and converts outdated secondary identifiers to current primary identifiers, if available.",
-              "The FixID functionality currently covers secondary identifiers from",
-              HTML("<b>HGNC</b>"),
-              ", ",
-              HTML("<b>HMDB</b>"),
-              ", ",
-              HTML("<b>ChEBI</b>"),
-              "and ",
-              HTML("<b>Wikidata</b>"),
-              "which can be converted to the corresponding primary identifier from the initial database.",
-              "After this step, the CrossMapID can be used to convert the primary-ID-enhanced dataset to any other database currently supported by BridgeDb:",
-              tags$ul(
-                tags$li(
-                  "The full overview of supported databases is available on the BridgeDb website (bridgedb.org/pages/system-codes)."
-                )
+          br(),
+          h4(strong("The secondary identifier challenge"), style = "color: #004578;"),
+          p(
+            "After mapping identifiers from one database to another, integrating data can remain a challenge due to the presence of",
+            HTML("<b>retired, deleted, split, and/or merged identifiers</b>"),
+            " currently present in databases and datasets alike. These outdated identifiers are called",
+            HTML("<b><span style='font-size:15px;'>“secondary”</span></b>"),
+            " while the identifiers currently supported by databases are referred to as",
+            HTML("<b><span style='font-size:15px;'>“primary”</span></b>"),
+            ". The presence of secondary identifiers in a used dataset or database can lead to information loss and hinders effective data integration. While some tools exist to convert secondary identifiers to current ones, these tools only support one type of data (either genes/proteins or metabolites): ",
+            tags$ul(
+              tags$li("https://www.genenames.org/tools/multi-symbol-checker/"),
+              tags$li(
+                "https://www.metaboanalyst.ca/MetaboAnalyst/upload/ConvertView.xhtml"
               )
             ),
-            tags$li(
-              style = "list-style-type: decimal;",
-              HTML(
-                "<b><span style='font-size:15px;color: #004578;'>CrossMapID:</span></b>"
+            "These tools currently do not have an API or other form of programmatic access, leading to issues in big omics data analysis."
+          ),
+          br(),
+          h4(strong("omicsFixID"), style = "color: #004578;"),
+          p(
+            "To address the challenges of integrating data from different biological sources that contain secondary identifiers, we developed a user-friendly Shiny app called omicsFixID, which provides two key functions:",
+            tags$ul(
+              tags$li(
+                style = "list-style-type: decimal;",
+                HTML(
+                  "<b><span style='font-size:15px;color: #004578;'>FixID:</span></b>"
+                ),
+                br(),
+                "Provides statistics on the percentage of secondary identifiers in the dataset and converts outdated secondary identifiers to current primary identifiers, if available.",
+                "The FixID functionality currently covers secondary identifiers from",
+                HTML("<b>HGNC</b>"),
+                ", ",
+                HTML("<b>HMDB</b>"),
+                ", ",
+                HTML("<b>ChEBI</b>"),
+                "and ",
+                HTML("<b>Wikidata</b>"),
+                ", which can be converted to the corresponding primary identifier from the initial database.",
+                "After this step, the CrossMapID can be used to convert the primary-ID-enhanced dataset to any other database currently supported by BridgeDb:",
+                tags$ul(
+                  tags$li(
+                    "The full overview of supported databases is available on the BridgeDb website (bridgedb.org/pages/system-codes)."
+                  )
+                )
               ),
-              br(),
-              "uses BridgeDb's REST-API to convert identifiers."
+              tags$li(
+                style = "list-style-type: decimal;",
+                HTML(
+                  "<b><span style='font-size:15px;color: #004578;'>CrossMapID:</span></b>"
+                ),
+                br(),
+                "Uses BridgeDb's REST-API to convert identifiers."
+              )
             )
-          )
-        ),
-        p(
-          "The metadata for the latest update of the mapping files is also available to users for queries within the app."
-        ),
-        br(),
-        p(
-          HTML("<b>Future development </b>"),
-          "entails updating the Secondary-to-Primary identifier mapping files regularly via GitHub Actions to ensure accuracy."
-        ),
-        br(),
-        hr()
-        # Add a citation section
-        # h4("How to Cite ..."),
-        # p("")
+          ),
+          p(
+            "The metadata for the latest update of the mapping files is also available to users for queries within the app."
+          ),
+          br()
+          # Add a citation section
+          # h4("How to Cite ..."),
+          # p("")
+        )
       ),
       # Tab 2: Sec2pri
       tabPanel(
@@ -257,7 +255,14 @@ ui <- function() {
                 # Add buttons for performing the identifier mapping and clearing the list
                 div(style = "margin-top: -10px"),
                 div(
-                  actionButton("sec2pri_get", "FixID",
+                  actionButton("sec2pri_get",
+                               HTML(
+                                 paste(
+                                   "<span data-toggle='tooltip' title='",
+                                   tooltips$description[tooltips$tooltip == "FixID"],
+                                   "'>FixID</span>"
+                                )
+                               ),
                                style = "color: white; background-color: #004578; border-color: #004578"),
                   actionButton("sec2pri_clear_list", "Clear results",
                                style = "color: white; background-color: #004578; border-color: #004578"),
@@ -337,7 +342,14 @@ ui <- function() {
                 # Add buttons for performing the identifier mapping and clearing the list
                 div(style = "margin-top: -10px"),
                 div(
-                  actionButton("BridgeDb_get", "Bridge IDs",
+                  actionButton("BridgeDb_get",
+                               HTML(
+                                 paste(
+                                   "<span data-toggle='tooltip' title='",
+                                   tooltips$description[tooltips$tooltip == "Bridge IDs"],
+                                   "'>Bridge IDs</span>"
+                                 )
+                               ),
                                style = "color: white; background-color: #004578; border-color: #004578"),
                   actionButton("BridgeDb_clear_list", "Clear results",
                                style = "color: white; background-color: #004578; border-color: #004578"),
@@ -371,35 +383,70 @@ ui <- function() {
       tabPanel(
         "User Guide",
         icon = icon("clipboard"),
-        align = "justify"
+        align = "justify",
+        div(
+          style = "margin-top: 15px;",
+          # Add user guide
+
+        )
       ),
       # Tab 5: Database info
       tabPanel(
         "Database Info.",
         icon = icon("circle-info"),
-        align = "justify"
+        align = "justify",
+        div(
+          style = "margin-top: 15px;",
+          # Add database info
+
+        )
       ),
       # Tab 5: Contact us
       tabPanel(
         "Contact us",
         icon = icon("envelope"),
+        align = "justify",
         div(
           style = "margin-top: 15px;",
           # Add a contact us section
           br(),
           p(
             HTML(
-              "<b><span style='font-size:16px;color: #004578;'>For questions and comments:</span></b>"
+              "<b><span style='font-size:16px;color: #004578;'>To request adding a new data source or report an issue related to mapping information, please create an issue in this GitHub repository:</span></b>"
             )
           ),
           p(
-            HTML("<b>Tooba Abbassi-Daloii</b>"),
-            ": t.abbassidaloii@maastrichtuniversity.nl"
+            "omicsFixID user interface", a(href = "https://github.com/sec2pri/mapping_preprocessing.git", target = "_blank", "repository"), "."
+          ),
+          p(
+            "Direct link to create", a (href = "https://github.com/sec2pri/mapping_preprocessing/issues/new", target = "_blank", "an issue")
           ),
           br(),
-          p("Department Bioinformatics - BiGCaT"),
-          p("NUTRIM, Maastricht University, Maastricht, The Netherlands")
-        )
+          p(
+            HTML(
+              "<b><span style='font-size:16px;color: #004578;'>To request adding a new functionaly to the user interface or report an issue with our interface, please create an issue in this GitHub repository:</span></b>"
+            )
+          ),
+          p(
+            "Mapping preprocessing", a(href = "https://github.com/sec2pri/omicsFixID.git", target = "_blank", "repository"), "."
+          ),
+          p(
+            "Direct link to create", a (href = "https://github.com/sec2pri/omicsFixID/issues/new", target = "_blank", "an issue")
+          )
+        ),
+        br(),
+        p(
+          HTML(
+            "<b><span style='font-size:16px;color: #004578;'>For any other questions or comments, please contact:</span></b>"
+          )
+        ),
+        p(
+          HTML("<b>Tooba Abbassi-Daloii</b>"),
+          ": t.abbassidaloii@maastrichtuniversity.nl"
+        ),
+        br(),
+        p("Department Bioinformatics - BiGCaT,"),
+        p("NUTRIM, Maastricht University, Maastricht, The Netherlands."),
       ),
       inverse = T
     ),
@@ -631,7 +678,7 @@ server <- function(input, output, session) {
       inputId = "sec2pri_download_format",
       label = HTML(
         paste(
-          "Choose a download format:&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='",
+          "Choose a download format&nbsp;<i class='fas fa-info-circle info-icon' data-toggle='tooltip' title='",
           tooltips$description[tooltips$tooltip == "Format"],
           "'></i> :"
         )
@@ -849,6 +896,13 @@ server <- function(input, output, session) {
     }
   })
 
+  # Function to read primary ids related to the output datasource for CrossMapID
+  read_output_primary <- reactive({
+    req(input$outputDataSource)
+    priID_list <-
+      read_primary_input(sec2priDataSource = input$outputDataSource)
+  })
+
   # Function to make the output table
   BridgeDb_output <- reactive({
     req(!is.null(identifiersList()))
@@ -873,6 +927,7 @@ server <- function(input, output, session) {
                                         inputSystemCode = input_data_source,
                                         outputSystemCode = output_data_source) %>%
         unique()
+
     }
     return(BridgeDb_results)
   })
@@ -881,17 +936,21 @@ server <- function(input, output, session) {
   observeEvent(input$BridgeDb_get,
                {
                  BridgeDb_mapping$BridgeDb_table <- NULL
-
                  if (!is.null(BridgeDb_output())) {
-                   BridgeDb_mapping$BridgeDb_table <- req(DT::datatable(
-                     BridgeDb_output(),
-                     options = list(
-                       orderClasses = TRUE,
-                       lengthMenu = c(10, 25, 50, 100),
-                       pageLength = 10
-                     ),
-                     rownames = FALSE
-                   ))
+                   BridgeDb_results <- BridgeDb_output()
+                   #check all lines coming from BridgeDb again against the primary IDs list, and keep the ones that are primary
+                   BridgeDb_results <- BridgeDb_results[BridgeDb_results$target %in% read_output_primary(),]
+                   if(!is.null(BridgeDb_results)){
+                     BridgeDb_mapping$BridgeDb_table <- req(DT::datatable(
+                       BridgeDb_results,
+                       options = list(
+                         orderClasses = TRUE,
+                         lengthMenu = c(10, 25, 50, 100),
+                         pageLength = 10
+                       ),
+                       rownames = FALSE
+                     ))
+                   }
                  }
                },
                ignoreInit = TRUE)
@@ -912,21 +971,26 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       if (!is.null(BridgeDb_output())) {
-        write.table(
-          BridgeDb_output(),
-          file,
-          row.names = FALSE,
-          sep = ifelse(input$BridgeDb_download_format == "tsv", "\t", ","),
-          quote = FALSE
-        )
+        BridgeDb_results <- BridgeDb_output()
+        #check all lines coming from BridgeDb again against the primary IDs list, and keep the ones that are primary
+        BridgeDb_results <- BridgeDb_results[BridgeDb_results$target %in% read_output_primary(),]
+        if(!is.null(BridgeDb_results)){
+          write.table(
+            BridgeDb_results,
+            file,
+            row.names = FALSE,
+            sep = ifelse(input$BridgeDb_download_format == "tsv", "\t", ","),
+            quote = FALSE
+          )
+        }
       }
     }
   )
   observe({
-    if (is.null(BridgeDb_output())) {
-      shinyjs::disable("BridgeDb_download")
-    } else {
+    if (!is.null(BridgeDb_output())) {
       shinyjs::enable("BridgeDb_download")
+    } else {
+      shinyjs::disable("BridgeDb_download")
     }
   })
 

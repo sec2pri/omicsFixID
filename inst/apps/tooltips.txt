@@ -5,3 +5,5 @@ Identifier file	to be added
 Identifiers	to be added
 Format	You can download your results in CSV, TSV, and SSSOM formats. CSV (Comma-Separated Values) is a simple tabular format for data storage and exchange, with fields separated by commas. TSV (Tab-Separated Values) is a tabular format similar to CSV, but with fields separated by tabs, often used to avoid comma-related issues. SSSOM (Simple Standard for Sharing Ontology Mappings) is a specialized format for sharing ontology mappings, including metadata, enhancing data interoperability.
 	to be added
+Bridge IDs	Uses REST-API of BridgeDb to convert identifiers.
+FixID	Checks the input list and map secondary identifiers to primary identifiers.
