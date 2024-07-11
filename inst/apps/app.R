@@ -305,14 +305,14 @@ ui <- function() {
                 style = "width: 250px;",
                 div(style = "margin-top: -10px"),
 
-                #Render the input options for selecting a identifier type
-                radioButtons(
-                  "type_BridgeDb",
-                  "Choose identifier type:",
-                  inline = TRUE,
-                  c("Gene/Protein" = "gene", "Metabolites" = "metabolite"),
-                  selected = "metabolite"
-                ),
+                # #Render the input options for selecting a identifier type
+                # radioButtons(
+                #   "type_BridgeDb",
+                #   "Choose identifier type:",
+                #   inline = TRUE,
+                #   c("Gene/Protein" = "gene", "Metabolites" = "metabolite"),
+                #   selected = "metabolite"
+                # ),
                 # #Render the input options for selecting a species
                 # conditionalPanel(condition = "input.type_BridgeDb == 'gene'",
                 #                  uiOutput("inputSpecies")),
@@ -325,15 +325,15 @@ ui <- function() {
                 #   placeholder = "Please upload file.."
                 # ),
                 # div(style = "margin-top: -30px"),
-                #Add a text area input for entering identifiers
-                textAreaInput(
-                  "BridgeDb_identifiers",
-                  "or insert identifier(s) here",
-                  value = NULL,
-                  width = NULL,
-                  placeholder = "one identifier per row"
-                ),
-                div(style = "margin-top: -10px"),
+                # #Add a text area input for entering identifiers
+                # textAreaInput(
+                #   "BridgeDb_identifiers",
+                #   "or insert identifier(s) here",
+                #   value = NULL,
+                #   width = NULL,
+                #   placeholder = "one identifier per row"
+                # ),
+                # div(style = "margin-top: -10px"),
                 #Render the input options for selecting a data source
                 uiOutput("inputDataSource"),
                 div(style = "margin-top: -10px"),
@@ -775,118 +775,123 @@ server <- function(input, output, session) {
   # }, deleteFile = F)
 
   #BridgeDb tab
-  #Handle clearing of BridgeDb_identifiers
-  observeEvent(c(input$type_BridgeDb, input$inputDataSource), {
-    if(is.null(PriIDList())) {
-      updateTextAreaInput(session,
-                          inputId = "BridgeDb_identifiers",
-                          value = "") #Clear the text area
-    }
-  })
+  # #Handle clearing of BridgeDb_identifiers
+  # observeEvent(c(input$type_BridgeDb, input$inputDataSource), {
+  #   if(is.null(PriIDList())) {
+  #     updateTextAreaInput(session,
+  #                         inputId = "BridgeDb_identifiers",
+  #                         value = "") #Clear the text area
+  #   }
+  # })
 
   ##Define the input options based
   ###Species
-  observe({
-    if(input$type_BridgeDb == "gene") {
-      output$inputSpecies <- renderUI({
-        #Render the input options for selecting a species
-        selectInput(
-          inputId = "inputSpecies",
-          label = "Choose species:",
-          choices = c("Human"),
-          selected = "Human"
-        )
-      })
-    } else if(input$type_BridgeDb == "metabolite") {
-      output$inputSpecies <- renderUI({
-        #Render an empty UI if identifier type is not gene
-        NULL
-      })
-    }
-  })
+  # observe({
+  #   if(input$type_BridgeDb == "gene") {
+  #     output$inputSpecies <- renderUI({
+  #       #Render the input options for selecting a species
+  #       selectInput(
+  #         inputId = "inputSpecies",
+  #         label = "Choose species:",
+  #         choices = c("Human"),
+  #         selected = "Human"
+  #       )
+  #     })
+  #   } else if(input$type_BridgeDb == "metabolite") {
+  #     output$inputSpecies <- renderUI({
+  #       #Render an empty UI if identifier type is not gene
+  #       NULL
+  #     })
+  #   }
+  # })
   ###Input data source
-  observe({
-    if(input$type_BridgeDb == "gene") {
-      output$inputDataSource <- renderUI({
-        BridgeDb_mapping$BridgeDb_table <- NULL
-
-        #Render the input options for selecting a species
-        selectInput(
-          inputId = "inputDataSource",
-          label = "Choose the input data source:",
-          choices = sort(dataSources$source[dataSources$type == "gene"]),
-          selected = "HGNC alias2symbol"
-        )
-      })
-    } else if(input$type_BridgeDb == "metabolite") {
-      output$inputDataSource <- renderUI({
-        BridgeDb_mapping$BridgeDb_table <- NULL
-
-        #Render the input options for selecting a species
-        selectInput(
-          inputId = "inputDataSource",
-          label = "Choose the input data source:",
-          choices = sort(dataSources$source[dataSources$type == "metabolite"]),
-          selected = "ChEBI"
-        )
-      })
-    }
-  })
+  # observe({
+  #   if(input$type_BridgeDb == "gene") {
+  #     output$inputDataSource <- renderUI({
+  #       BridgeDb_mapping$BridgeDb_table <- NULL
+  #
+  #       #Render the input options for selecting a species
+  #       selectInput(
+  #         inputId = "inputDataSource",
+  #         label = "Choose the input data source:",
+  #         choices = sort(dataSources$source[dataSources$type == "gene"]),
+  #         selected = "HGNC alias2symbol"
+  #       )
+  #     })
+  #   } else if(input$type_BridgeDb == "metabolite") {
+  #     output$inputDataSource <- renderUI({
+  #       BridgeDb_mapping$BridgeDb_table <- NULL
+  #
+  #       #Render the input options for selecting a species
+  #       selectInput(
+  #         inputId = "inputDataSource",
+  #         label = "Choose the input data source:",
+  #         choices = sort(dataSources$source[dataSources$type == "metabolite"]),
+  #         selected = "ChEBI"
+  #       )
+  #     })
+  #   }
+  # })
   ###Output data source
   observe({
-    if(input$type_BridgeDb == "gene") {
-      BridgeDb_mapping$BridgeDb_table <- NULL
-
-      output$outputDataSource <- renderUI({
-        #Render the input options for selecting a species
-        selectInput(
-          inputId = "outputDataSource",
-          label = "Choose one or more output data source:",
-          choices = c("All", sort(dataSources$source[dataSources$type == "gene"])),
-          selected = "Ensembl"
-        )
-      })
-    } else if(input$type_BridgeDb == "metabolite") {
+    if(!is.null(input$sec2priDataSource) && input$sec2priDataSource != "") {
+      if(input$sec2priDataSource %in% c("HGNC Accession number", "NCBI", "UniProt")) {
+        BridgeDb_mapping$BridgeDb_table <- NULL
+        output$outputDataSource <- renderUI({
+          #Render the input options for selecting a species
+          selectInput(
+            inputId = "outputDataSource",
+            label = HTML(
+              paste0("Your input identifier list was <u>", input$sec2priDataSource,
+                     "</u>.<br><br>Choose output data source:")),
+            choices = c("All", sort(dataSources$source[dataSources$type == "gene"])),
+            selected = "Ensembl"
+          )
+        })
+      } else if(input$sec2priDataSource %in% c("Wikidata genes/proteins", "Wikidata metabolites")){
+        BridgeDb_mapping$BridgeDb_table <- NULL
+        output$outputDataSource <- renderUI({
+          #Render the input options for selecting a species
+          selectInput(
+            inputId = "outputDataSource",
+            label = HTML(
+              paste0("Your input identifier list was <u>", input$sec2priDataSource,
+                     "</u>.<br><br>This data source is not currently supported by BridgeDb's API")),
+            choices = c("None")
+          )
+        })
+      } else {
       output$outputDataSource <- renderUI({
         BridgeDb_mapping$BridgeDb_table <- NULL
 
         #Render the input options for selecting a species
         selectInput(
           inputId = "outputDataSource",
-          label = "Choose one or more output data source:",
+          label = HTML(
+            paste0("<br>Your input identifier list was <u>", input$sec2priDataSource,
+                   "</u>.<br><br>Choose output data source:")),
           choices = c("All", sort(dataSources$source[dataSources$type == "metabolite"])),
           selected = "HMDB"
         )
       })
+      }
     }
   })
 
-  BridgeDb_input_file <- reactiveVal(NULL)
-  observeEvent(input$BridgeDb_identifiers_file, {
-    if(!is.null(input$BridgeDb_identifiers_file)) {
-      BridgeDb_input_file(input$BridgeDb_identifiers_file)
-    }
-  })
+  # BridgeDb_input_file <- reactiveVal(NULL)
+  # observeEvent(input$BridgeDb_identifiers_file, {
+  #   if(!is.null(input$BridgeDb_identifiers_file)) {
+  #     BridgeDb_input_file(input$BridgeDb_identifiers_file)
+  #   }
+  # })
 
   #Function to make a vector for input identifiers
   identifiersList <- reactive({
-    if(!is.null(BridgeDb_input_file())) {
-      print("Reading identifiers from file...")
-      input_ids <- readLines(BridgeDb_input_file()$datapath)
-      #Remove empty or whitespace-only last line
-      last_line <- input_ids[length(input_ids)]
-      if(nchar(trimws(last_line)) == 0) {
-        input_ids <- input_ids[-length(input_ids)]
-      }
-      #Split identifiers on newline, comma, or space
-      input_ids <-
-        unlist(strsplit(input_ids, '\\"|\n|\t|,|\\s+', perl = TRUE))
-      #Remove empty strings and return the list of identifiers
-      input_ids[input_ids != ""]
-      input_ids
-    } else if(!is.null(input$BridgeDb_identifiers)) {
+    if(!is.null(input$copyPrimaryID)) {
+      primary_id_text <- PriIDList()
+      primary_id_text <- paste(primary_id_text, collapse = "\n")
       #Split identifiers entered in text area by newline, comma, or space
-      input_ids <- as.character(input$BridgeDb_identifiers)
+      input_ids <- as.character(primary_id_text)
       input_ids <-
         unlist(strsplit(input_ids, "\n|,|\\s+", perl = TRUE))
       #Remove empty strings and return the list of identifiers
@@ -906,28 +911,29 @@ server <- function(input, output, session) {
   BridgeDb_output <- reactive({
     req(!is.null(identifiersList()))
     BridgeDb_mapping$BridgeDb_table <- NULL
+    type_BridgeDb <- ifelse(input$sec2priDataSource %in% c("HMDB", "ChEBI", "Wikidata metabolites"), "metabolite", "gene")
 
-    if(input$type_BridgeDb == "gene") {
-      input_species <- input$inputSpecies
-      input_data_source <- input$inputDataSource
-      output_data_source <- input$outputDataSource
-      BridgeDb_results <- Xref_function(
-        identifiersList(),
-        inputSpecies = input_species,
-        inputSystemCode = input_data_source,
-        outputSystemCode = output_data_source
+    input_data_source <- input$sec2priDataSource
+    input_data_source <-
+      ifelse(input_data_source == "UniProt",
+             "Uniprot-TrEMBL",
+             ifelse(input_data_source == "NCBI",
+                    "Entrez Gene", input_data_source))
+    output_data_source <-
+      ifelse(!is.null(input$outputDataSource),
+             input$outputDataSource,
+             ifelse(type_BridgeDb == "metabolite",
+                    "HMDB",
+                    "Ensembl")
+             )
+
+    BridgeDb_results <- Xref_function(
+      identifiersList(),
+      inputSpecies = "Human", #TODO: to support other species
+      inputSystemCode = input_data_source,
+      outputSystemCode = output_data_source
       ) %>%
-        unique()
-      # return(NULL)
-    } else if(input$type_BridgeDb == "metabolite") {
-      input_data_source <- input$inputDataSource
-      output_data_source <- input$outputDataSource
-      BridgeDb_results <- Xref_function(identifiersList(),
-                                        inputSystemCode = input_data_source,
-                                        outputSystemCode = output_data_source) %>%
-        unique()
-
-    }
+      unique()
     return(BridgeDb_results)
   })
 
@@ -938,7 +944,8 @@ server <- function(input, output, session) {
                  if(!is.null(BridgeDb_output())) {
                    BridgeDb_results <- BridgeDb_output()
                    #check all lines coming from BridgeDb again against the primary IDs list, and keep the ones that are primary
-                   BridgeDb_results <- BridgeDb_results[BridgeDb_results$target %in% read_output_primary(),]
+                   if(input$outputDataSource %in% c("HMDB", "ChEBI", "HGNC Accession number", "NCBI", "UniProt"))
+                     BridgeDb_results <- BridgeDb_results[BridgeDb_results$target %in% read_output_primary(),]
                    if(!is.null(BridgeDb_results)){
                      BridgeDb_mapping$BridgeDb_table <- req(DT::datatable(
                        BridgeDb_results,
@@ -972,7 +979,8 @@ server <- function(input, output, session) {
       if(!is.null(BridgeDb_output())) {
         BridgeDb_results <- BridgeDb_output()
         #check all lines coming from BridgeDb again against the primary IDs list, and keep the ones that are primary
-        BridgeDb_results <- BridgeDb_results[BridgeDb_results$target %in% read_output_primary(),]
+        if(input$outputDataSource %in% c("HMDB", "ChEBI", "HGNC Accession number", "NCBI", "UniProt"))
+          BridgeDb_results <- BridgeDb_results[BridgeDb_results$target %in% read_output_primary(),]
         if(!is.null(BridgeDb_results)){
           write.table(
             BridgeDb_results,
