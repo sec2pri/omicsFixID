@@ -1,0 +1,13 @@
+name: Docker build
+
+on:
+  repository_dispatch:
+    types: [update-event]
+  workflow_dispatch:
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
