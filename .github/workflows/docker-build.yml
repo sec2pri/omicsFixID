@@ -11,3 +11,9 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@v4
+        
+      - name: Echo client-payload values
+        run: |
+          echo "Ref: ${{ github.event.client_payload.ref }}"
+          echo "SHA: ${{ github.event.client_payload.sha }}"
+          echo "Datasource: ${{ github.event.client_payload.datasource }}"
