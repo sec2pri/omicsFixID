@@ -164,6 +164,8 @@ ui <- function() {
                 "The FixID functionality currently covers secondary identifiers from",
                 HTML("<b>HGNC</b>"),
                 ", ",
+                HTML("<b>NCBI</b>"),
+                ", ",
                 HTML("<b>HMDB</b>"),
                 ", ",
                 HTML("<b>ChEBI</b>"),
@@ -398,10 +400,18 @@ ui <- function() {
         div(
           style = "margin-top: 15px;",
           #Add database info
-
-        )
+          tagList(
+            lapply(c("HGNC", "UniProt", "NCBI", "Wikidata", "HMDB", "ChEBI"), function(datasource) {
+              metadata <- database_info(sec2priDataSource = datasource)
+              if (!is.character(metadata)) {
+                stop("create_metadata did not return a character vector")
+              }
+              p(HTML(metadata))
+            })
+          )
+          )
       ),
-      #Tab 5: Contact us
+      #Tab 6: Contact us
       tabPanel(
         "Contact us",
         icon = icon("envelope"),
