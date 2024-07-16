@@ -1041,3 +1041,39 @@ Xref_function <- function(identifiers,
   }
 
 }
+
+# Define a function to print datasource info
+database_info <- function(sec2priDataSource) {
+  sourceVersion <- read.table(
+    "processed_mapping_files/dataSourceVersion.tsv",
+    sep = "\t",
+    header = TRUE,
+    as.is = TRUE
+  )
+  sourceVersion <- sourceVersion[match(gsub(" .*", "", sec2priDataSource), sourceVersion$datasource), ]
+  sourceVersion <- paste0(
+    "<b>",
+    sec2priDataSource,
+    "</b>",
+    ": The data was ",
+    sourceVersion$type,
+    " on ",
+    "<b>",
+    sourceVersion$date,
+    "</b>",
+    ifelse(sourceVersion$type == "queried", " from ", " in "),
+    paste0(
+      "<a href='",
+      sourceVersion$website,
+      "' target='_blank'>",
+      sourceVersion$website,
+      "</a>"
+    ),
+    ifelse(
+      is.na(sourceVersion$version),
+      ".",
+      paste0(" (version: ", sourceVersion$version, ").")
+    )
+  )
+  return(sourceVersion)
+}
