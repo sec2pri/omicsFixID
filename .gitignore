@@ -11,5 +11,4 @@ renv.lock
 renv/*
 
 # ignore input and output files #
-*.tsv
-*.bridge
+
