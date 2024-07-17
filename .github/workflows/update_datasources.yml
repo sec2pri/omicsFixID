@@ -21,13 +21,15 @@ jobs:
           echo "Datasource: ${{ github.event.client_payload.datasource }}"
           echo "Processed data: ${{ github.event.client_payload.processed_data }}"
           echo "Release number: ${{ github.event.client_payload.version }}"
+
           
       - name: Update data files
         env:
           PAT_TOKEN: ${{ secrets.PAT }}
         run: |
           cd inst/apps/processed_mapping_files
-          wget -O processed_data.zip --header="Authorization: Bearer $PAT_TOKEN" "${{ github.event.client_payload.processed_data }}"
+          artifact=$(echo ${{ github.event.client_payload.processed_data }} | grep -oP '[^/]*$')
+          curl -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -L -o processed_data.zip "https://api.github.com/repos/sec2pri/mapping_preprocessing/actions/artifacts/$artifact/zip" 
           unzip processed_data.zip
           rm -f processed_data.zip
           cd ../../
