@@ -21,13 +21,17 @@ jobs:
           echo "Datasource: ${{ github.event.client_payload.datasource }}"
           echo "Processed data: ${{ github.event.client_payload.processed_data }}"
           echo "Release number: ${{ github.event.client_payload.version }}"
+          
       - name: Update data files
+        env:
+          PAT_TOKEN: ${{ secrets.PAT }}
         run: |
           cd inst/apps/processed_mapping_files
-          wget _O processed_data.zip ${{ github.event.client_payload.processed_data }}
+          wget -O processed_data.zip --header="Authorization: Bearer $PAT_TOKEN" "${{ github.event.client_payload.processed_data }}"
           unzip processed_data.zip
           rm -f processed_data.zip
           cd ../../
+          
       - name: Commit new data files
         env:
           token: ${{ secrets.PAT }}
