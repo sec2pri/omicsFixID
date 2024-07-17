@@ -32,6 +32,7 @@ jobs:
           curl -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -L -o processed_data.zip "https://api.github.com/repos/sec2pri/mapping_preprocessing/actions/artifacts/$artifact/zip" 
           unzip processed_data.zip
           rm -f processed_data.zip
+          ls
           cd ../../
           
       - name: Commit new data files
@@ -40,7 +41,8 @@ jobs:
         run: |
           git config --local user.email "action@github.com"  
           git config --local user.name "OmicsFixID bot"
-          git add inst/apps/*
+          git add --all
+          git status
           git commit -m "Updated data" -m "Artifact URL: ${{ github.event.client_payload.datasource }}"
           git push
 
