@@ -28,15 +28,15 @@ jobs:
           unzip processed_data.zip
           rm -f processed_data.zip
           cd ../../
-- name: Commit new data files
-  env:
-    token: ${{ secrets.PAT }}
-  run: |
-    git config --local user.email "action@github.com"
-    git config --local user.name "OmicsFixID bot"
-    git add inst/apps/*
-    git commit -m "Updated data" -m "Artifact URL: ${{ github.event.client_payload.datasource }}"
-    git push
+      - name: Commit new data files
+        env:
+          token: ${{ secrets.PAT }}
+        run: |
+          git config --local user.email "action@github.com"  
+          git config --local user.name "OmicsFixID bot"
+          git add inst/apps/*
+          git commit -m "Updated data" -m "Artifact URL: ${{ github.event.client_payload.datasource }}"
+          git push
 
     #TODO - name: Update dataSourceVersion
 
