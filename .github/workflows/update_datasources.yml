@@ -1,0 +1,42 @@
+name: Update datasources
+
+on:
+  repository_dispatch:
+    types: [update-event]
+  workflow_dispatch:
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+        
+      - name: Echo client-payload values
+        run: |
+          echo "Ref: ${{ github.event.client_payload.ref }}"
+          echo "SHA: ${{ github.event.client_payload.sha }}"
+          echo "Datasource: ${{ github.event.client_payload.datasource }}"
+          echo "Processed data: ${{ github.event.client_payload.processed_data }}"
+          echo "Release number: ${{ github.event.client_payload.version }}"
+      - name: Update data files
+        run: |
+          cd inst/apps/processed_mapping_files
+          wget _O processed_data.zip ${{ github.event.client_payload.processed_data }}
+          unzip processed_data.zip
+          rm -f processed_data.zip
+          cd ../../
+- name: Commit new data files
+  env:
+    token: ${{ secrets.PAT }}
+  run: |
+    git config --local user.email "action@github.com"
+    git config --local user.name "OmicsFixID bot"
+    git add inst/apps/*
+    git commit -m "Updated data" -m "Artifact URL: ${{ github.event.client_payload.datasource }}"
+    git push
+
+    #TODO - name: Update dataSourceVersion
+
