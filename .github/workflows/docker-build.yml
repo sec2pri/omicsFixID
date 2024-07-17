@@ -17,3 +17,6 @@ jobs:
           echo "Ref: ${{ github.event.client_payload.ref }}"
           echo "SHA: ${{ github.event.client_payload.sha }}"
           echo "Datasource: ${{ github.event.client_payload.datasource }}"
+          echo "Release number: ${{ github.event.client_payload.version }}"
+          echo "URL: ${{ github.event.client_payload.url }}"
+          echo "Processed data: ${{ github.event.client_payload.processed_data }}"
