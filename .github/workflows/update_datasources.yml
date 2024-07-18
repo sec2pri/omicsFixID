@@ -64,13 +64,8 @@ jobs:
           input_file="inst/apps/processed_mapping_files/dataSourceVersion-old.tsv"
           output_file="inst/apps/processed_mapping_files/dataSourceVersion.tsv"
           # Update the file using awk
-          awk -F'\t' -v OFS='\t' -v ds="$datasource" -v nd="$new_date" -v nv="$new_version" '
-          BEGIN { OFS = FS }
-            NR==1 { print; next }
-            $1 == ds { $2 = nv; $4 = nd }
-            { print }
-            ' "$input_file" > "$output_file"
-          if [ "$(md5sum file1 | awk '{ print $1 }')" == "$(md5sum file2 | awk '{ print $1 }')" ]; then
+          awk -F'\t' -v OFS='\t' -v ds="$datasource" -v nd="$new_date" -v nv="$new_version" ' 
+          if diff "$file1" "$file2" >/dev/null 2>&1; then
             echo changes=False >> $GITHUB_ENV
           else
             echo changes=True >> $GITHUB_ENV
