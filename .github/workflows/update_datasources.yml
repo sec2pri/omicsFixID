@@ -20,7 +20,7 @@ jobs:
           echo "SHA: ${{ github.event.client_payload.sha }}"
           echo "Datasource: ${{ github.event.client_payload.datasource }}"
           echo "Processed data: ${{ github.event.client_payload.processed_data }}"
-          echo "Release number: ${{ github.event.client_payload.version }}"
+          echo "Release number: 
           echo "Date: ${{ github.event.client_payload.date }}"
 
           
@@ -47,5 +47,37 @@ jobs:
           git commit -m "Updated data" -m "Artifact URL: ${{ github.event.client_payload.datasource }}"
           git push -f
 
-    #TODO - name: Update dataSourceVersion
-
+      - name: Update dataSourceVersion
+        run: |
+          new_date=${{ github.event.client_payload.date }}
+          new_version=${{ github.event.client_payload.version }}
+          datasource=${{ github.event.client_payload.datasource }}
+          # File containing the data
+          cp inst/apps/processed_mapping_files/dataSourceVersion.tsv inst/apps/processed_mapping_files/dataSourceVersion-old.tsv
+          input_file="inst/apps/processed_mapping_files/dataSourceVersion-old.tsv"
+          output_file="inst/apps/processed_mapping_files/dataSourceVersion.tsv"
+          # Update the file using awk
+          awk -F'\t' -v OFS='\t' -v ds="$datasource" -v nd="$new_date" -v nv="$new_version" '
+          BEGIN { OFS = FS }
+            NR==1 { print; next }
+            $1 == ds { $2 = nv; $4 = nd }
+            { print }
+            ' "$input_file" > "$output_file"
+          if [ "$(md5sum file1 | awk '{ print $1 }')" == "$(md5sum file2 | awk '{ print $1 }')" ]; then
+            echo changes=False >> $GITHUB_ENV
+          else
+            echo changes=True >> $GITHUB_ENV
+          fi
+          rm $input_file
+          
+      - name: Commit datasource
+        if: env.changes == True
+        env:
+          token: ${{ secrets.PAT }}
+        run: |
+          git config --local user.email "action@github.com"  
+          git config --local user.name "OmicsFixID bot"
+          git add --all
+          git status
+          git commit -m "Updated dataSourceVersion for $datasource"
+          git push -f
