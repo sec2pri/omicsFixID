@@ -97,7 +97,7 @@ jobs:
           # Check the status and proceed only if there are changes
           if ! git diff-index --quiet HEAD; then
           # Commit changes
-            git commit -m "Updated dataSourceVersion for $datasource"
+            git commit -m "Automated update"
             # Push changes
             git push -f
           else
