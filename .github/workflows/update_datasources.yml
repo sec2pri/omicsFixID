@@ -64,7 +64,7 @@ jobs:
           input_file="inst/apps/processed_mapping_files/dataSourceVersion-old.tsv"
           output_file="inst/apps/processed_mapping_files/dataSourceVersion.tsv"
           # Update the file using awk
-          awk -F'\t' -v OFS='\t' -v ds="$datasource" -v nd="$new_date" -v nv="$new_version" ' 
+          awk -F'\t' -v OFS='\t' -v ds="$datasource" -v nd="$new_date" -v nv="$new_version"
           if diff "$file1" "$file2" >/dev/null 2>&1; then
             echo changes=False >> $GITHUB_ENV
           else
