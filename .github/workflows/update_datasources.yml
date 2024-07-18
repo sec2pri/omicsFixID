@@ -45,7 +45,7 @@ jobs:
           git add --all
           git status
           git commit -m "Updated data" -m "Artifact URL: ${{ github.event.client_payload.datasource }}"
-          git push
+          git push -f
 
     #TODO - name: Update dataSourceVersion
 
