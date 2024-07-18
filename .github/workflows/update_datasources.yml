@@ -63,8 +63,22 @@ jobs:
           cp inst/apps/processed_mapping_files/dataSourceVersion.tsv inst/apps/processed_mapping_files/dataSourceVersion-old.tsv
           input_file="inst/apps/processed_mapping_files/dataSourceVersion-old.tsv"
           output_file="inst/apps/processed_mapping_files/dataSourceVersion.tsv"
-          # Update the file using awk
-          awk -F'\t' -v OFS='\t' -v ds="$datasource" -v nd="$new_date" -v nv="$new_version"
+          # Use awk to update the file
+          awk -v ds="$datasource" -v nv="$new_version" -v nd="$new_date" '
+          BEGIN {
+            FS=OFS="\t"
+            }
+            NR==1 {
+            print $0  # print header
+            next
+            }
+            {
+            if ($1 == ds) {
+            $2 = nv
+            $4 = "\"" nd "\""
+            }
+            print $0
+          }' input_file.tsv > output_file.tsv
           if diff "$file1" "$file2" >/dev/null 2>&1; then
             echo changes=False >> $GITHUB_ENV
           else
