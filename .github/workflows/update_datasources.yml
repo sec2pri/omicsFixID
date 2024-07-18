@@ -78,7 +78,7 @@ jobs:
             $4 = "\"" nd "\""
             }
             print $0
-          }' input_file.tsv > output_file.tsv
+          }' $input_file > $output_file
           if diff "$file1" "$file2" >/dev/null 2>&1; then
             echo changes=False >> $GITHUB_ENV
           else
