@@ -21,6 +21,7 @@ jobs:
           echo "Datasource: ${{ github.event.client_payload.datasource }}"
           echo "Processed data: ${{ github.event.client_payload.processed_data }}"
           echo "Release number: ${{ github.event.client_payload.version }}"
+          echo "Date: ${{ github.event.client_payload.date }}"
 
           
       - name: Update data files
