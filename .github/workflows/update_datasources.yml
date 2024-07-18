@@ -40,13 +40,20 @@ jobs:
         env:
           token: ${{ secrets.PAT }}
         run: |
+          # Set Git configuration
           git config --local user.email "action@github.com"  
           git config --local user.name "OmicsFixID bot"
+          # Stage all changes
           git add --all
-          git status
-          git commit -m "Updated data" -m "Artifact URL: ${{ github.event.client_payload.datasource }}"
-          git push -f
-
+          # Check the status and proceed only if there are changes
+          if ! git diff-index --quiet HEAD; then
+          # Commit changes
+            git commit -m "Updated data" -m "Artifact URL: ${{ github.event.client_payload.datasource }}"
+            # Push changes
+            git push -f
+          else
+            echo "No changes to commit."
+          fi
       - name: Update dataSourceVersion
         run: |
           new_date=${{ github.event.client_payload.date }}
@@ -78,6 +85,12 @@ jobs:
           git config --local user.email "action@github.com"  
           git config --local user.name "OmicsFixID bot"
           git add --all
-          git status
-          git commit -m "Updated dataSourceVersion for $datasource"
-          git push -f
+          # Check the status and proceed only if there are changes
+          if ! git diff-index --quiet HEAD; then
+          # Commit changes
+            git commit -m "Updated dataSourceVersion for $datasource"
+            # Push changes
+            git push -f
+          else
+            echo "No changes to commit."
+          fi
