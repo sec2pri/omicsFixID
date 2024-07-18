@@ -20,7 +20,7 @@ jobs:
           echo "SHA: ${{ github.event.client_payload.sha }}"
           echo "Datasource: ${{ github.event.client_payload.datasource }}"
           echo "Processed data: ${{ github.event.client_payload.processed_data }}"
-          echo "Release number: 
+          echo "Release number: ${{ github.event.client_payload.version }}"
           echo "Date: ${{ github.event.client_payload.date }}"
 
           
