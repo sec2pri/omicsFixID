@@ -71,7 +71,7 @@ jobs:
           rm $input_file
           
       - name: Commit datasource
-        if: env.changes == True
+        if: env.changes=='True'
         env:
           token: ${{ secrets.PAT }}
         run: |
