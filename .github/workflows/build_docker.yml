@@ -1,0 +1,21 @@
+name: Build docker
+on:
+  workflow_dispatch:
+  push:
+    paths:
+     - 'inst/apps/processed_mapping_files/dataSourceVersion.tsv'
+  pull_request:
+    paths:
+     - 'inst/apps/processed_mapping_files/dataSourceVersion.tsv'
+jobs:
+  build-docker:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+      - name: Build docker
+        run: |
+          docker build -t tabbassidaloii/omicsfixid:latest .

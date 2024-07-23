@@ -1,0 +1,105 @@
+name: Update datasources
+
+on:
+  repository_dispatch:
+    types: [update-event]
+  workflow_dispatch:
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+        
+      - name: Echo client-payload values
+        run: |
+          echo "Ref: ${{ github.event.client_payload.ref }}"
+          echo "SHA: ${{ github.event.client_payload.sha }}"
+          echo "Datasource: ${{ github.event.client_payload.datasource }}"
+          echo "Processed data: ${{ github.event.client_payload.processed_data }}"
+          echo "Release number: ${{ github.event.client_payload.version }}"
+          echo "Date: ${{ github.event.client_payload.date }}"
+
+          
+      - name: Update data files
+        env:
+          PAT_TOKEN: ${{ secrets.PAT }}
+        run: |
+          cd inst/apps/processed_mapping_files
+          artifact=$(echo ${{ github.event.client_payload.processed_data }} | grep -oP '[^/]*$')
+          curl -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -L -o processed_data.zip "https://api.github.com/repos/sec2pri/mapping_preprocessing/actions/artifacts/$artifact/zip" 
+          unzip -f processed_data.zip
+          rm -f processed_data.zip
+          ls
+          cd ../../
+          
+      - name: Commit new data files
+        env:
+          token: ${{ secrets.PAT }}
+        run: |
+          # Set Git configuration
+          git config --local user.email "action@github.com"  
+          git config --local user.name "OmicsFixID bot"
+          # Stage all changes
+          git add --all
+          # Check the status and proceed only if there are changes
+          if ! git diff-index --quiet HEAD; then
+          # Commit changes
+            git commit -m "Updated data" -m "Artifact URL: ${{ github.event.client_payload.datasource }}"
+            # Push changes
+            git push -f
+          else
+            echo "No changes to commit."
+          fi
+      - name: Update dataSourceVersion
+        run: |
+          new_date=${{ github.event.client_payload.date }}
+          new_version=${{ github.event.client_payload.version }}
+          datasource=${{ github.event.client_payload.datasource }}
+          # File containing the data
+          cp inst/apps/processed_mapping_files/dataSourceVersion.tsv inst/apps/processed_mapping_files/dataSourceVersion-old.tsv
+          input_file="inst/apps/processed_mapping_files/dataSourceVersion-old.tsv"
+          output_file="inst/apps/processed_mapping_files/dataSourceVersion.tsv"
+          # Use awk to update the file
+          awk -v ds="$datasource" -v nv="$new_version" -v nd="$new_date" '
+          BEGIN {
+            FS=OFS="\t"
+            }
+            NR==1 {
+            print $0  # print header
+            next
+            }
+            {
+            if ($1 == ds) {
+            $2 = nv
+            $4 = "\"" nd "\""
+            }
+            print $0
+          }' $input_file > $output_file
+          if diff "$file1" "$file2" >/dev/null 2>&1; then
+            echo changes=False >> $GITHUB_ENV
+          else
+            echo changes=True >> $GITHUB_ENV
+          fi
+          rm $input_file
+          
+      - name: Commit datasource
+        if: env.changes=='True'
+        env:
+          token: ${{ secrets.PAT }}
+        run: |
+          git config --local user.email "action@github.com"  
+          git config --local user.name "OmicsFixID bot"
+          git add --all
+          # Check the status and proceed only if there are changes
+          if ! git diff-index --quiet HEAD; then
+          # Commit changes
+            git commit -m "Automated update"
+            # Push changes
+            git push -f
+          else
+            echo "No changes to commit."
+          fi
