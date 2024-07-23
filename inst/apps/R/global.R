@@ -1055,7 +1055,7 @@ database_info <- function(sec2priDataSource) {
     "<b>",
     sec2priDataSource,
     "</b>",
-    ": The data was ",
+    ": The mapping file is created based on the data ",
     sourceVersion$type,
     " on ",
     "<b>",
