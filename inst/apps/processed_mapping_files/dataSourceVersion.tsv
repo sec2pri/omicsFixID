@@ -1,6 +1,6 @@
 datasource	version	type	date	website
 Wikidata		queried	"09.07.2025"	https://dumps.wikimedia.org/wikidatawiki/entities through https://qlever.cs.uni-freiburg.de/wikidata
-ChEBI	242	released	"2024-07-24"	https://ftp.ebi.ac.uk/pub/databases/chebi/archive/rel242/SDF/ChEBI_complete_3star.sdf.gz
+ChEBI	243	released	"2024-07-26"	https://ftp.ebi.ac.uk/pub/databases/chebi/archive/rel243/SDF/ChEBI_complete_3star.sdf.gz
 HGNC		released	"July 1st, 2023"	https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/archive/quarterly/tsv/
 HMDB	5	released	"November 17th, 2021"	http://www.hmdb.ca/system/downloads/current/hmdb_metabolites.zip (all Metabolites file in XML format)
 UniProt		released	"March, 2023"	https://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/
